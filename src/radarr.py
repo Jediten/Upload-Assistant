@@ -19,13 +19,16 @@ class RadarrManager:
         return value.strip().rstrip('/')
 
     @staticmethod
-    def _normalize_imdb_id(value: Optional[int]) -> Optional[str]:
+    def _normalize_imdb_id(value: Any) -> Optional[str]:
         if not value:
             return None
         imdb_id = str(value).strip()
         if not imdb_id or imdb_id == "0":
             return None
-        return imdb_id if imdb_id.startswith("tt") else f"tt{imdb_id.zfill(7)}"
+        if imdb_id.lower().startswith("tt"):
+            imdb_digits = imdb_id[2:]
+            return f"tt{imdb_digits.zfill(7)}" if imdb_digits.isdigit() else imdb_id.lower()
+        return f"tt{imdb_id.zfill(7)}"
 
     @staticmethod
     def _movie_label(movie: Mapping[str, Any]) -> str:
@@ -111,28 +114,40 @@ class RadarrManager:
         return response.json()
 
     async def _lookup_movie_by_ids(self, client: httpx.AsyncClient, instance: Mapping[str, Any], tmdb_id: Optional[int], imdb_id: Optional[int]) -> Optional[dict[str, Any]]:
-        lookup_candidates: list[tuple[str, dict[str, Any]]] = []
+        lookup_candidates: list[tuple[str, dict[str, Any], str, str]] = []
         if tmdb_id:
-            lookup_candidates.append(("/api/v3/movie/lookup/tmdb", {"tmdbId": tmdb_id}))
-            lookup_candidates.append(("/api/v3/movie/lookup", {"term": f"tmdb:{tmdb_id}"}))
+            lookup_candidates.append(("/api/v3/movie/lookup/tmdb", {"tmdbId": tmdb_id}, "tmdbId", str(tmdb_id)))
+            lookup_candidates.append(("/api/v3/movie/lookup", {"term": f"tmdb:{tmdb_id}"}, "tmdbId", str(tmdb_id)))
         normalized_imdb = self._normalize_imdb_id(imdb_id)
         if normalized_imdb:
-            lookup_candidates.append(("/api/v3/movie/lookup/imdb", {"imdbId": normalized_imdb}))
-            lookup_candidates.append(("/api/v3/movie/lookup", {"term": f"imdb:{normalized_imdb}"}))
+            lookup_candidates.append(("/api/v3/movie/lookup/imdb", {"imdbId": normalized_imdb}, "imdbId", normalized_imdb))
+            lookup_candidates.append(("/api/v3/movie/lookup", {"term": f"imdb:{normalized_imdb}"}, "imdbId", normalized_imdb))
 
-        for path, params in lookup_candidates:
+        for path, params, match_field, expected_value in lookup_candidates:
             try:
                 data = await self._request_json(client, "GET", instance, path, params=params)
-            except httpx.HTTPStatusError:
-                continue
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 404:
+                    continue
+                raise
 
             if isinstance(data, list):
                 items = cast(list[dict[str, Any]], data)
-                if items:
-                    return items[0]
+                for item in items:
+                    if self._movie_matches_lookup_id(item, match_field, expected_value):
+                        return item
             elif isinstance(data, dict):
-                return cast(dict[str, Any], data)
+                item = cast(dict[str, Any], data)
+                if self._movie_matches_lookup_id(item, match_field, expected_value):
+                    return item
         return None
+
+    def _movie_matches_lookup_id(self, movie: Mapping[str, Any], field: str, expected_value: str) -> bool:
+        if field == "tmdbId":
+            return str(self._coerce_optional_int(movie.get("tmdbId")) or "") == expected_value
+        if field == "imdbId":
+            return self._normalize_imdb_id(movie.get("imdbId")) == expected_value
+        return False
 
     async def _lookup_movie_by_filename(self, client: httpx.AsyncClient, instance: Mapping[str, Any], filename: Optional[str]) -> Optional[dict[str, Any]]:
         if not filename:
