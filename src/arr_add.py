@@ -271,7 +271,8 @@ def _sonarr_add_first_seen_key(
     duplicate_keys: set[SonarrAddDuplicateKey],
     seen_keys: set[SonarrAddDuplicateKey],
 ) -> Optional[SonarrAddDuplicateKey]:
-    key_types = ("tvdb_id", "year") if any(key[1] in ("tvdb_id", "year") for key in duplicate_keys) else ("title",)
+    key_types = ["tvdb_id", "year"] if any(key[1] in ("tvdb_id", "year") for key in duplicate_keys) else []
+    key_types.append("title")
     for key_type in key_types:
         for key in sorted(duplicate_keys):
             if key[1] == key_type and key in seen_keys:
@@ -674,6 +675,8 @@ async def process_sonarr_add(
         if meta.get(key) not in (None, "", 0, "0")
     }
     if not tracker_ids:
+        reason = "No tracker IDs found in qBittorrent."
+        await _record_sonarr_add_unable_title(path, search_term, reason, meta, unable_log_file)
         console.print(f"[yellow]Sonarr add skipped: no tracker IDs found in qBittorrent for {os.path.basename(path)}[/yellow]")
         return True
 
