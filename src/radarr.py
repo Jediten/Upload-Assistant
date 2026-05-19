@@ -158,9 +158,9 @@ class RadarrManager:
                 return item
         return None
 
-    async def add_movie_by_ids(self, tmdb_id: Optional[int] = None, imdb_id: Optional[int] = None, fallback_filename: Optional[str] = None, debug: bool = False) -> RadarrAddResult:
-        if not tmdb_id and not imdb_id and not fallback_filename:
-            return {"status": "skipped", "detail": "no TMDb ID, IMDb ID, or filename was available"}
+    async def add_movie_by_ids(self, tmdb_id: Optional[int] = None, imdb_id: Optional[int] = None, debug: bool = False) -> RadarrAddResult:
+        if not tmdb_id and not imdb_id:
+            return {"status": "skipped", "detail": "no TMDb ID or IMDb ID was available"}
 
         instances = self._iter_configured_instances()
         if not instances:
@@ -188,33 +188,12 @@ class RadarrManager:
                             "movie": existing,
                         }
 
-                    used_filename_fallback = False
                     movie = await self._lookup_movie_by_ids(client, instance, tmdb_id, imdb_id)
                     if not movie:
-                        movie = await self._lookup_movie_by_filename(client, instance, fallback_filename)
-                        used_filename_fallback = movie is not None
-                        if not movie:
-                            last_error = f"Radarr instance {label} did not find a movie for TMDb={tmdb_id} IMDb={imdb_id} filename={fallback_filename}."
-                            if debug:
-                                console.print(f"[yellow]{last_error}[/yellow]")
-                            continue
-
-                    if used_filename_fallback:
-                        fallback_tmdb_id = movie.get("tmdbId")
-                        fallback_imdb_id = movie.get("imdbId")
-                        existing_from_fallback = await self._existing_movie(
-                            client,
-                            instance,
-                            self._coerce_optional_int(fallback_tmdb_id),
-                            self._coerce_optional_int(fallback_imdb_id),
-                        )
-                        if existing_from_fallback:
-                            return {
-                                "status": "exists",
-                                "detail": f"already in Radarr: {self._movie_label(existing_from_fallback)}",
-                                "movie": existing_from_fallback,
-                                "used_filename_fallback": True,
-                            }
+                        last_error = f"Radarr instance {label} did not find a movie for TMDb={tmdb_id} IMDb={imdb_id}."
+                        if debug:
+                            console.print(f"[yellow]{last_error}[/yellow]")
+                        continue
 
                     payload = dict(movie)
                     payload["qualityProfileId"] = instance["quality_profile_id"]
@@ -229,9 +208,8 @@ class RadarrManager:
                             "status": "added",
                             "detail": f"added to Radarr: {self._movie_label(cast(dict[str, Any], added))}",
                             "movie": added,
-                            "used_filename_fallback": used_filename_fallback,
                         }
-                    return {"status": "added", "detail": "added to Radarr", "used_filename_fallback": used_filename_fallback}
+                    return {"status": "added", "detail": "added to Radarr"}
                 except httpx.HTTPStatusError as e:
                     response_text = e.response.text.strip()
                     last_error = f"Radarr instance {label} HTTP {e.response.status_code}: {response_text or e.response.reason_phrase}"

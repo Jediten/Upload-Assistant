@@ -595,30 +595,25 @@ async def process_radarr_add(
 
     tmdb_id = _safe_int_id(meta.get('tmdb_id') or meta.get('tmdb'))
     imdb_id = _safe_int_id(meta.get('imdb_id') or meta.get('imdb'))
-    if not tmdb_id and not imdb_id and meta.get('debug', False):
-        console.print(f"[yellow]Tracker IDs did not return TMDb or IMDb for {os.path.basename(path)}; trying Radarr filename fallback.[/yellow]")
+    if not tmdb_id and not imdb_id:
+        reason = "Tracker IDs did not return a TMDb or IMDb ID after trying available trackers."
+        await _record_radarr_add_unable_title(path, search_term, reason, meta, unable_log_file)
+        console.print(f"[red]Radarr add unable: {search_term} was logged because no TMDb or IMDb ID was found.[/red]")
+        return True
 
     result = await RadarrManager(config).add_movie_by_ids(
         tmdb_id=tmdb_id,
         imdb_id=imdb_id,
-        fallback_filename=search_term,
         debug=meta.get('debug', False),
     )
     status = str(result.get("status") or "failed")
     detail = str(result.get("detail") or "")
-    used_filename_fallback = bool(result.get("used_filename_fallback", False))
     if status == "added":
-        if used_filename_fallback:
-            console.print(f"[red]Radarr add filename fallback used: {detail}[/red]")
-        else:
-            console.print(f"[green]Radarr add complete: {detail}[/green]")
+        console.print(f"[green]Radarr add complete: {detail}[/green]")
         await _remember_radarr_add_key(duplicate_key, seen_title_years, seen_key_file)
         return True
     if status == "exists":
-        if used_filename_fallback:
-            console.print(f"[red]Radarr add filename fallback skipped: {detail}[/red]")
-        else:
-            console.print(f"[red]Radarr add skipped: {detail}[/red]")
+        console.print(f"[red]Radarr add skipped: {detail}[/red]")
         await _remember_radarr_add_key(duplicate_key, seen_title_years, seen_key_file)
         return True
 
@@ -721,5 +716,7 @@ async def process_sonarr_add(
         await _remember_sonarr_add_keys(series_keys or duplicate_keys, seen_keys, seen_key_file)
         return True
 
+    reason = detail or "Sonarr add failed."
+    await _record_sonarr_add_unable_title(path, search_term, reason, meta, unable_log_file)
     console.print(f"[red]Sonarr add failed for {os.path.basename(path)}: {detail}[/red]")
     return False

@@ -243,11 +243,10 @@ class SonarrManager:
         tvdb_id: Optional[int] = None,
         imdb_id: Optional[int] = None,
         tmdb_id: Optional[int] = None,
-        fallback_title: Optional[str] = None,
         debug: bool = False,
     ) -> SonarrAddResult:
-        if not tvdb_id and not imdb_id and not tmdb_id and not fallback_title:
-            return {"status": "skipped", "detail": "no TVDb ID, IMDb ID, TMDb ID, or title was available"}
+        if not tvdb_id and not imdb_id and not tmdb_id:
+            return {"status": "skipped", "detail": "no TVDb ID, IMDb ID, or TMDb ID was available"}
 
         instances = self._iter_configured_instances()
         if not instances:
@@ -275,32 +274,12 @@ class SonarrManager:
                             "series": existing,
                         }
 
-                    used_title_fallback = False
                     series = await self._lookup_series_by_tvdb_id(client, instance, tvdb_id)
                     if not series:
-                        series = await self._lookup_series_by_term(client, instance, fallback_title)
-                        used_title_fallback = series is not None
-                        if not series:
-                            last_error = f"Sonarr instance {label} did not find a series for TVDb={tvdb_id} IMDb={imdb_id} TMDb={tmdb_id} title={fallback_title}."
-                            if debug:
-                                console.print(f"[yellow]{last_error}[/yellow]")
-                            continue
-
-                    if used_title_fallback:
-                        existing_from_fallback = await self._existing_series(
-                            client,
-                            instance,
-                            self._coerce_optional_int(series.get("tvdbId")),
-                            self._coerce_optional_int(series.get("imdbId")),
-                            self._coerce_optional_int(series.get("tmdbId")),
-                        )
-                        if existing_from_fallback:
-                            return {
-                                "status": "exists",
-                                "detail": f"already in Sonarr: {self._series_label(existing_from_fallback)}",
-                                "series": existing_from_fallback,
-                                "used_title_fallback": True,
-                            }
+                        last_error = f"Sonarr instance {label} did not find a series for TVDb={tvdb_id} IMDb={imdb_id} TMDb={tmdb_id}."
+                        if debug:
+                            console.print(f"[yellow]{last_error}[/yellow]")
+                        continue
 
                     payload = self._prepare_add_payload(series, instance)
                     added = await self._request_json(client, "POST", instance, "/api/v3/series", body=payload)
@@ -309,9 +288,8 @@ class SonarrManager:
                             "status": "added",
                             "detail": f"added to Sonarr: {self._series_label(cast(dict[str, Any], added))}",
                             "series": added,
-                            "used_title_fallback": used_title_fallback,
                         }
-                    return {"status": "added", "detail": "added to Sonarr", "used_title_fallback": used_title_fallback}
+                    return {"status": "added", "detail": "added to Sonarr"}
                 except httpx.HTTPStatusError as e:
                     response_text = e.response.text.strip()
                     last_error = f"Sonarr instance {label} HTTP {e.response.status_code}: {response_text or e.response.reason_phrase}"
@@ -474,4 +452,3 @@ class SonarrManager:
             "year": None,
             "release_group": None
         }
-
