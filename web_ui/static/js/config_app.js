@@ -252,6 +252,7 @@ const trackerNameMap = {
   'MTV': 'MoreThanTV',
   'NBL': 'Nebulance',
   'NETHD': 'NetHD',
+  'NQ': 'NordicQuality',
   'OTW': 'OldToonsWorld',
   'OE': 'OnlyEncodes+',
   'PTP': 'PassThePopcorn',
