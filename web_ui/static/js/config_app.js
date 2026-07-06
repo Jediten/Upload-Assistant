@@ -242,13 +242,16 @@ const trackerNameMap = {
   'IS': 'ImmortalSeed',
   'IHD': 'InfinityHD',
   'ITT': 'ItaTorrents',
+  'KKC': 'KoKoCon',
   'LDU': 'LastDigitalUnderground',
   'LT': 'Lat-Team',
   'LCD': 'Locadora',
   'LST': 'LST',
   'LUME': 'Luminarr',
+  'MNS': 'MidnightScene',
   'MTV': 'MoreThanTV',
   'NBL': 'Nebulance',
+  'NETHD': 'NetHD',
   'OTW': 'OldToonsWorld',
   'OE': 'OnlyEncodes+',
   'PTP': 'PassThePopcorn',
@@ -278,7 +281,8 @@ const trackerNameMap = {
   'UTP': 'UTOPIA',
   'VMF': 'VietMediaF',
   'YOINK': 'YOiNKED',
-  'YUS': 'YUSCENE'
+  'YUS': 'YUSCENE',
+  'ZNTH': 'Zenith'
 };
 
 const getTrackerDisplayName = (acronym) => {
