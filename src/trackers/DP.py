@@ -24,12 +24,14 @@ class DP(UNIT3D):
         self.torrent_url = f'{self.base_url}/torrents/'
         self.banned_groups = [
             'ARCADE', 'aXXo', 'BANDOLEROS', 'BONE', 'BRrip', 'CM8', 'CrEwSaDe', 'CTFOH', 'dAV1nci', 'DNL',
-            'eranger2', 'FaNGDiNG0', 'FGT', 'FiSTER', 'flower', 'GalaxyTV', 'HD2DVD', 'HDTime', 'HorribleSubs',
-            'iHYTECH', 'ION10', 'iPlanet', 'KiNGDOM', 'LAMA', 'MeGusta', 'mHD', 'mSD', 'NaNi', 'NhaNc3', 'nHD',
-            'nikt0', 'nSD', 'OFT', 'PiTBULL', 'PRODJi', 'PSA', 'RARBG', 'Rifftrax', 'ROCKETRACCOON',
-            'SANTi', 'SasukeducK', 'SEEDSTER', 'ShAaNiG', 'Sicario', 'STUTTERSHIT', 'Subsplease', 'SyncUp',
-            'TAoE', 'TGALAXY', 'TGx', 'TORRENTGALAXY', 'ToVaR', 'Trix', 'TSP', 'TSPxL', 'ViSION', 'VXT',
-            'WAF', 'WKS', 'X0r', 'YIFY', 'YTS',
+            'eranger2', 'FaNGDiNG0', 'FGT', 'FiSTER', 'flower', 'GalaxyTV', 'Goki', 'H4XO', 'HD2DVD', 'HDTime',
+            'HorribleSubs', 'iHYTECH', 'ION10', 'iPlanet', 'KiNGDOM', 'LAMA', 'MeGusta', 'mHD', 'mSD', 'NaNi',
+            'NhaNc3', 'nHD', 'nikt0', 'nSD', 'OFT', 'PiTBULL', 'PRODJi', 'PSA', 'RARBG', 'Rifftrax',
+            'ROCKETRACCOON', 'SANTi', 'SARTRE', 'SasukeducK', 'SEEDSTER', 'ShAaNiG', 'Sicario', 'STUTTERSHIT',
+            'Subsplease', 'SyncUp', 'TAoE', 'TGALAXY', 'TGx', 'TORRENTGALAXY', 'ToVaR', 'Trix', 'TSP', 'TSPxL',
+            'ViSION', 'VXT', 'WAF', 'WKS', 'X0r', 'YIFY', 'YTS',
+            ['EVO', 'WEB-DLs are allowed'],
+            ['HDT', 'Remuxes or similar automated remuxes are not allowed'],
         ]
         pass
 
