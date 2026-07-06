@@ -350,7 +350,7 @@ config = {
 
     "TRACKERS": {
         # Which trackers do you want to upload to?
-        # Available tracker: A4K, ACM, AITHER, ANT, AR, ASC, AZ, BHD, BHDTV, BJS, BLU, BT, CBR, CZ, DC, DP, DT, EMUW, FF, FL, FNP, FRIKI, GPW, HDB, HDS, HDT, HHD, HUNO, IHD, IS, ITT, LCD, LDU, LST, LT, LUME, MTV, NBL, OE, OTW, PHD, PT, PTER, PTP, PTS, PTT, R4E, RAS, RF, RTF, SAM, SHRI, SN, SP, SPD, STC, THR, TIK, TL, TLZ, TOS, TTG, TTR, TVC, ULCX, UTP, YOINK, YUS
+        # Available tracker: A4K, ACM, AITHER, ANT, AR, ASC, AZ, BHD, BHDTV, BJS, BLU, BT, CBR, CZ, DC, DP, DT, EMUW, FF, FL, FNP, FRIKI, GPW, HDB, HDS, HDT, HHD, HUNO, IHD, IS, ITT, KKC, LCD, LDU, LST, LT, LUME, MNS, MTV, NBL, NETHD, OE, OTW, PHD, PT, PTER, PTP, PTS, PTT, R4E, RAS, RF, RTF, SAM, SHRI, SN, SP, SPD, STC, THR, TIK, TL, TLZ, TOS, TTG, TTR, TVC, ULCX, UTP, VMF, YOINK, YUS
         # Only add the trackers you want to upload to on a regular basis
         "default_trackers": "",
 
@@ -632,6 +632,16 @@ config = {
             "announce_url": "https://immortalseed.me/announce.php?passkey=<PASSKEY>",
             "anon": False,
         },
+        "KKC": {
+            # XBTIT-based anime tracker (tracker.kokocon.net)
+            # for KKC to work you need to export cookies from https://tracker.kokocon.net/ using a cookie exporter extension
+            # cookies need to be in netscape format and need to be in data/cookies/KKC.txt
+            # Important: remove #HttpOnly_ prefix from cookie lines if present
+            "link_dir_name": "",
+            "url": "https://tracker.kokocon.net/",
+            "announce_url": "https://tracker.kokocon.net/announce.php?pid=<PASSKEY>",
+            "full_mediainfo": False,
+        },
         "ITT": {
             # Instead of using the tracker acronym for folder name when sym/hard linking, you can use a custom name
             "link_dir_name": "",
@@ -677,6 +687,24 @@ config = {
             "anon": False,
             # Send uploads to LUME modq for staff approval
             "modq": False,
+        },
+        "MNS": {
+            # MidnightScene - UNIT3D-based tracker
+            # Instead of using the tracker acronym for folder name when sym/hard linking, you can use a custom name
+            "link_dir_name": "",
+            "api_key": "",
+            "anon": False,
+            # Send uploads to MNS modq for staff approval
+            "modq": False,
+        },
+        "NETHD": {
+            # NexusPHP-based Vietnamese tracker
+            # for NETHD to work you need to export cookies from the site using a cookie exporter extension
+            # cookies need to be in netscape format and need to be in data/cookies/NETHD.txt
+            "link_dir_name": "",
+            "url": "https://nethd.org/",
+            "announce_url": "https://nethd.org/announce.php?passkey=<PASSKEY>",
+            "full_mediainfo": False,
         },
         "MTV": {
             # Instead of using the tracker acronym for folder name when sym/hard linking, you can use a custom name
@@ -934,6 +962,15 @@ config = {
             "link_dir_name": "",
             "api_key": "",
             "anon": False,
+        },
+        "VMF": {
+            # VietMediaF - UNIT3D-based Vietnamese tracker
+            # Instead of using the tracker acronym for folder name when sym/hard linking, you can use a custom name
+            "link_dir_name": "",
+            "api_key": "",
+            "anon": False,
+            # Send uploads to VMF modq for staff approval
+            "modq": False,
         },
         "YOINK": {
             # Instead of using the tracker acronym for folder name when sym/hard linking, you can use a custom name

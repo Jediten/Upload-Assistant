@@ -151,6 +151,7 @@ const argumentCategories = [
       { label: "--bhd", placeholder: "ID_OR_URL", description: "BHD id/link" },
       { label: "--huno", placeholder: "ID_OR_URL", description: "HUNO id/link" },
       { label: "--ulcx", placeholder: "ID_OR_URL", description: "ULCX id/link" },
+      { label: "--vmf", placeholder: "ID_OR_URL", description: "VMF id/link" },
       { label: "--torrenthash", placeholder: "HASH", description: "(qBitTorrent only) Get site id from Torrent hash" }
     ]
   },
@@ -313,13 +314,13 @@ function AudionutsUAGUI() {
   const API_BASE = window.location.origin + '/api';
   // Derive an application base path from the API base so links work under subpath deployments
   const APP_BASE = API_BASE.replace(/\/api$/, '');
-  
+
   const [directories, setDirectories] = useState([
     { name: 'data', type: 'folder', path: '/data', children: [] },
     { name: 'torrent_storage_dir', type: 'folder', path: '/torrent_storage_dir', children: [] },
     { name: 'Upload-Assistant', type: 'folder', path: '/Upload-Assistant', children: [] }
   ]);
-  
+
   const [selectedPath, setSelectedPath] = useState('');
   const [, setSelectedName] = useState('');
   const [customArgs, setCustomArgs] = useState('');
@@ -334,11 +335,11 @@ function AudionutsUAGUI() {
   const [isDarkMode, setIsDarkMode] = useState(getStoredTheme);
   const [argSearchFilter, setArgSearchFilter] = useState('');
   const [collapsedSections, setCollapsedSections] = useState(new Set());
-  
+
   // Mobile state
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activePanel, setActivePanel] = useState('main'); // 'main' | 'files' | 'args'
-  
+
   // File Browser search states
   const [fileBrowserSearch, setFileBrowserSearch] = useState('');
   const [fileBrowserSearchResults, setFileBrowserSearchResults] = useState(null);
@@ -348,7 +349,7 @@ function AudionutsUAGUI() {
 
   // Folder loading states
   const [loadingFolders, setLoadingFolders] = useState(new Set());
-  
+
   // Description file/link states
   const [descDirectories, setDescDirectories] = useState([]);
   const [descExpandedFolders, setDescExpandedFolders] = useState(new Set());
@@ -357,16 +358,16 @@ function AudionutsUAGUI() {
   const [descFileError, setDescFileError] = useState('');
   const [descBrowserCollapsed, setDescBrowserCollapsed] = useState(false);
   const [descLinkFocused, setDescLinkFocused] = useState(false);
-  
+
   const richOutputRef = useRef(null);
   const lastFullHashRef = useRef('');
   const inputRef = useRef(null);
   const sseAbortControllerRef = useRef(null);
-  
+
   // Detect if --descfile or --desclink is present in arguments
   const hasDescFile = customArgs.includes('--descfile');
   const hasDescLink = customArgs.includes('--desclink');
-  
+
   // URL validation helper - accepts any HTTP/HTTPS URL (server fetches and parses any URL)
   const isValidUrl = (string) => {
     try {
@@ -376,39 +377,39 @@ function AudionutsUAGUI() {
       return false;
     }
   };
-  
+
   // Path validation helper - checks if string looks like a valid file path
   const isValidDescFilePath = (path) => {
     if (!path || path.trim() === '') return { valid: false, error: '' };
-    
+
     const trimmed = path.trim();
-    
+
     // Check for valid description file extensions
     const validExtensions = ['.txt', '.nfo', '.md'];
     const hasValidExt = validExtensions.some(ext => trimmed.toLowerCase().endsWith(ext));
-    
+
     // Check if it looks like a path (has separators or starts with drive letter/root)
     const hasPathSeparator = trimmed.includes('/') || trimmed.includes('\\');
     const startsWithRoot = /^[a-zA-Z]:/.test(trimmed) || trimmed.startsWith('/') || trimmed.startsWith('\\');
     const looksLikePath = hasPathSeparator || startsWithRoot;
-    
+
     if (!looksLikePath) {
-      return { 
-        valid: false, 
-        error: 'Path should be a full file path (e.g., /path/to/desc.txt or C:\\path\\desc.txt)' 
+      return {
+        valid: false,
+        error: 'Path should be a full file path (e.g., /path/to/desc.txt or C:\\path\\desc.txt)'
       };
     }
-    
+
     if (!hasValidExt) {
-      return { 
-        valid: false, 
-        error: 'File should have a valid extension (.txt, .nfo, or .md)' 
+      return {
+        valid: false,
+        error: 'File should have a valid extension (.txt, .nfo, or .md)'
       };
     }
-    
+
     return { valid: true, error: '' };
   };
-  
+
   // Extract value from argument string (e.g., --descfile "path" or --desclink "url")
   // Supports both space-separated (--arg "value") and equals-separated (--arg="value") formats
   const extractArgValue = (args, argName) => {
@@ -421,7 +422,7 @@ function AudionutsUAGUI() {
       if (val.startsWith('--')) return '';
       return val.trim();
     }
-    
+
     // Then try space-separated format: --argname "value" or --argname 'value' or --argname value
     const spaceRegex = new RegExp(`${argName}\\s+(?:"([^"]+)"|'([^']+)'|([^\\s-][^\\s]*|(?!--)[^\\s]+))`, 'i');
     const spaceMatch = args.match(spaceRegex);
@@ -433,7 +434,7 @@ function AudionutsUAGUI() {
     }
     return '';
   };
-  
+
   // Update argument value in string
   // Supports both space-separated (--arg "value") and equals-separated (--arg="value") formats
   const updateArgValue = (args, argName, value) => {
@@ -441,11 +442,11 @@ function AudionutsUAGUI() {
     if (!args.includes(argName)) {
       return args;
     }
-    
+
     // Check which format is being used
     const hasEqualsFormat = new RegExp(`${argName}=`, 'i').test(args);
     const hasSpaceValue = new RegExp(`${argName}\\s+(?:"[^"]*"|'[^']*'|(?!--)[^\\s]+)`, 'i').test(args);
-    
+
     // If value is empty, remove the value but keep the flag
     if (!value) {
       if (hasEqualsFormat) {
@@ -457,10 +458,10 @@ function AudionutsUAGUI() {
       }
       return args;
     }
-    
+
     // Quote the value if it contains spaces
     const quotedValue = value.includes(' ') ? `"${value}"` : `"${value}"`;
-    
+
     if (hasEqualsFormat) {
       // Replace equals-format value: --arg="value" or --arg='value' or --arg=value
       return args.replace(new RegExp(`(${argName})=(?:"[^"]*"|'[^']*'|[^\\s]*)`, 'i'), `$1=${quotedValue}`);
@@ -472,11 +473,11 @@ function AudionutsUAGUI() {
       return args.replace(new RegExp(`(${argName})(\\s|$)`, 'i'), `$1 ${quotedValue}$2`);
     }
   };
-  
+
   // Get current values from args
   const descFilePath = extractArgValue(customArgs, '--descfile');
   const descLinkUrl = extractArgValue(customArgs, '--desclink');
-  
+
   // Validate desclink URL when it changes
   useEffect(() => {
     if (hasDescLink && descLinkUrl) {
@@ -489,7 +490,7 @@ function AudionutsUAGUI() {
       setDescLinkError('');
     }
   }, [descLinkUrl, hasDescLink]);
-  
+
   // Validate descfile path when it changes and auto-collapse when valid
   useEffect(() => {
     if (hasDescFile && descFilePath) {
@@ -503,7 +504,7 @@ function AudionutsUAGUI() {
       setDescFileError('');
     }
   }, [descFilePath, hasDescFile]);
-  
+
   // Reset description browser when argument is removed
   useEffect(() => {
     if (!hasDescFile) {
@@ -516,12 +517,12 @@ function AudionutsUAGUI() {
       setDescLinkError('');
     }
   }, [hasDescFile, hasDescLink]);
-  
+
   // Update descfile in args
   const updateDescFile = (path) => {
     setCustomArgs(prev => updateArgValue(prev, '--descfile', path));
   };
-  
+
   // Update desclink in args
   const updateDescLink = (url) => {
     setCustomArgs(prev => updateArgValue(prev, '--desclink', url));
@@ -568,11 +569,11 @@ function AudionutsUAGUI() {
     appendSystemMessage('> ' + input, 'user-input');
     setUserInput('');
     try {
-        await apiFetch(`${API_BASE}/input`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id, input }),
-        });
+      await apiFetch(`${API_BASE}/input`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id, input }),
+      });
     } catch (err) {
       console.error('Failed to send input:', err);
       appendSystemMessage('Failed to send input', 'error');
@@ -598,7 +599,7 @@ function AudionutsUAGUI() {
       console.error('Failed to load browse roots:', error);
     }
   };
-  
+
   // Load description file browser roots
   const loadDescBrowseRoots = async () => {
     try {
@@ -613,13 +614,13 @@ function AudionutsUAGUI() {
       console.error('Failed to load desc browse roots:', error);
     }
   };
-  
+
   // Load description folder contents
   const loadDescFolderContents = async (path) => {
     try {
       const response = await apiFetch(`${API_BASE}/browse?path=${encodeURIComponent(path)}&filter=desc`);
       const data = await response.json();
-      
+
       if (data.success && data.items) {
         updateDescDirectoryTree(path, data.items);
       }
@@ -627,7 +628,7 @@ function AudionutsUAGUI() {
       console.error('Failed to load desc folder:', error);
     }
   };
-  
+
   // Update description directory tree
   const updateDescDirectoryTree = (path, items) => {
     const updateTree = (nodes) => {
@@ -640,10 +641,10 @@ function AudionutsUAGUI() {
         return node;
       });
     };
-    
+
     setDescDirectories((prev) => updateTree(prev));
   };
-  
+
   // Toggle description folder
   const toggleDescFolder = async (path) => {
     const newExpanded = new Set(descExpandedFolders);
@@ -654,7 +655,7 @@ function AudionutsUAGUI() {
     } else {
       newExpanded.add(path);
       setDescExpandedFolders(newExpanded);
-      
+
       // Show loading indicator while fetching
       setDescLoadingFolders(prev => new Set(prev).add(path));
       try {
@@ -668,7 +669,7 @@ function AudionutsUAGUI() {
       }
     }
   };
-  
+
   // Load desc roots when --descfile is added
   useEffect(() => {
     if (hasDescFile && descDirectories.length === 0) {
@@ -731,14 +732,14 @@ function AudionutsUAGUI() {
 
   const toggleFolder = async (path) => {
     const newExpanded = new Set(expandedFolders);
-    
+
     if (newExpanded.has(path)) {
       newExpanded.delete(path);
       setExpandedFolders(newExpanded);
     } else {
       newExpanded.add(path);
       setExpandedFolders(newExpanded);
-      
+
       // Show loading indicator while fetching
       setLoadingFolders(prev => new Set(prev).add(path));
       try {
@@ -757,7 +758,7 @@ function AudionutsUAGUI() {
     try {
       const response = await apiFetch(`${API_BASE}/browse?path=${encodeURIComponent(path)}`);
       const data = await response.json();
-      
+
       if (data.success && data.items) {
         updateDirectoryTree(path, data.items);
       }
@@ -777,7 +778,7 @@ function AudionutsUAGUI() {
         return node;
       });
     };
-    
+
     setDirectories((prev) => updateTree(prev));
   };
 
@@ -837,15 +838,14 @@ function AudionutsUAGUI() {
       return (
         <div key={idx}>
           <div
-            className={`flex items-center gap-2 px-3 ${isMobile ? 'py-3' : 'py-2'} cursor-pointer transition-colors ${
-              selectedPath === item.path
+            className={`flex items-center gap-2 px-3 ${isMobile ? 'py-3' : 'py-2'} cursor-pointer transition-colors ${selectedPath === item.path
                 ? isDarkMode
                   ? 'bg-purple-900 border-l-4 border-purple-500'
                   : 'bg-blue-100 border-l-4 border-blue-500'
                 : isDarkMode
                   ? 'hover:bg-gray-700'
                   : 'hover:bg-gray-100'
-            }`}
+              }`}
             style={{ paddingLeft: '12px' }}
             onClick={() => {
               setSelectedPath(item.path);
@@ -876,15 +876,14 @@ function AudionutsUAGUI() {
       return (
         <div key={idx}>
           <div
-            className={`flex items-center gap-2 px-3 ${isMobile ? 'py-3' : 'py-2'} cursor-pointer transition-colors ${
-              selectedPath === item.path 
-                ? isDarkMode 
-                  ? 'bg-purple-900 border-l-4 border-purple-500' 
+            className={`flex items-center gap-2 px-3 ${isMobile ? 'py-3' : 'py-2'} cursor-pointer transition-colors ${selectedPath === item.path
+                ? isDarkMode
+                  ? 'bg-purple-900 border-l-4 border-purple-500'
                   : 'bg-blue-100 border-l-4 border-blue-500'
                 : isDarkMode
                   ? 'hover:bg-gray-700'
                   : 'hover:bg-gray-100'
-            }`}
+              }`}
             style={{ paddingLeft: `${level * 20 + 12}px` }}
             onClick={() => {
               if (item.type === 'folder') {
@@ -919,7 +918,7 @@ function AudionutsUAGUI() {
       );
     });
   };
-  
+
   // Render description file tree
   const renderDescFileTree = (items, level = 0) => {
     return items.map((item, idx) => {
@@ -927,15 +926,14 @@ function AudionutsUAGUI() {
       return (
         <div key={idx}>
           <div
-            className={`flex items-center gap-2 px-3 ${isMobile ? 'py-3' : 'py-2'} cursor-pointer transition-colors ${
-              descFilePath === item.path 
-                ? isDarkMode 
-                  ? 'bg-green-900 border-l-4 border-green-500' 
+            className={`flex items-center gap-2 px-3 ${isMobile ? 'py-3' : 'py-2'} cursor-pointer transition-colors ${descFilePath === item.path
+                ? isDarkMode
+                  ? 'bg-green-900 border-l-4 border-green-500'
                   : 'bg-green-100 border-l-4 border-green-500'
                 : isDarkMode
                   ? 'hover:bg-gray-700'
                   : 'hover:bg-gray-100'
-            }`}
+              }`}
             style={{ paddingLeft: `${level * 20 + 12}px` }}
             onClick={() => {
               if (item.type === 'folder') {
@@ -976,7 +974,7 @@ function AudionutsUAGUI() {
       appendSystemMessage('✗ Please select a file or folder first', 'error');
       return;
     }
-    
+
     // Validate --descfile: must have a valid description file path
     if (hasDescFile) {
       if (!descFilePath) {
@@ -989,7 +987,7 @@ function AudionutsUAGUI() {
         return;
       }
     }
-    
+
     // Validate --desclink: must have a valid URL
     if (hasDescLink) {
       if (!descLinkUrl) {
@@ -1039,7 +1037,7 @@ function AudionutsUAGUI() {
           args: customArgs,
           session_id: newSessionId
         })
-      , signal: controller.signal
+        , signal: controller.signal
       });
 
       if (!response.ok) {
@@ -1085,7 +1083,7 @@ function AudionutsUAGUI() {
             } catch (e) {
               console.error('Failed to render HTML fragment:', e);
             }
-              } else if (data.type === 'exit') {
+          } else if (data.type === 'exit') {
             if (!(localController && localController.signal.aborted)) {
               appendSystemMessage('');
               appendSystemMessage(`✓ Process exited with code ${data.code}`);
@@ -1293,11 +1291,10 @@ function AudionutsUAGUI() {
       <button
         key={panel}
         onClick={() => setActivePanel(panel)}
-        className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 transition-colors ${
-          activePanel === panel
+        className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 transition-colors ${activePanel === panel
             ? 'text-purple-400 border-t-2 border-purple-400'
             : isDarkMode ? 'text-gray-400' : 'text-gray-500'
-        }`}
+          }`}
       >
         {icon}
         <span className="text-xs font-medium">{label}</span>
@@ -1350,11 +1347,10 @@ function AudionutsUAGUI() {
                     value={fileBrowserSearch}
                     onChange={(e) => handleFileBrowserSearch(e.target.value)}
                     placeholder="Search files and folders..."
-                    className={`w-full pl-8 pr-8 py-1.5 text-sm rounded border ${
-                      isDarkMode
+                    className={`w-full pl-8 pr-8 py-1.5 text-sm rounded border ${isDarkMode
                         ? 'bg-gray-800 border-gray-600 text-gray-200 placeholder-gray-500 focus:border-purple-500'
                         : 'bg-white border-gray-300 text-gray-700 placeholder-gray-400 focus:border-blue-500'
-                    } focus:outline-none focus:ring-1 ${isDarkMode ? 'focus:ring-purple-500' : 'focus:ring-blue-500'}`}
+                      } focus:outline-none focus:ring-1 ${isDarkMode ? 'focus:ring-purple-500' : 'focus:ring-blue-500'}`}
                   />
                   <svg className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1462,138 +1458,134 @@ function AudionutsUAGUI() {
 
           {/* Main Upload Panel */}
           <div className={`flex flex-col h-full ${activePanel === 'main' ? '' : 'hidden'}`}>
-              {/* Top controls */}
-              <div className={`p-3 space-y-3 border-b flex-shrink-0 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                {selectedPath ? (
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-200'} border`}>
-                    <div className="flex items-center justify-between">
-                      <p className={`text-xs font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Selected:</p>
-                      <button
-                        onClick={() => setActivePanel('files')}
-                        className={`text-xs px-2 py-0.5 rounded ${isDarkMode ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
-                      >
-                        Browse
-                      </button>
-                    </div>
-                    <p className={`text-xs ${isDarkMode ? 'text-white' : 'text-gray-800'} break-all font-mono mt-1`}>{selectedPath}</p>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setActivePanel('files')}
-                    className={`w-full p-3 rounded-lg border-2 border-dashed text-center inline-flex items-center justify-center ${isDarkMode ? 'border-gray-600 text-gray-400 hover:border-purple-500 hover:text-purple-400' : 'border-gray-300 text-gray-500 hover:border-purple-500 hover:text-purple-600'}`}
-                  >
-                    <FolderIcon />
-                    <span className="text-sm ml-2">Tap to select a file or folder</span>
-                  </button>
-                )}
-
-                {/* Args input */}
-                <input
-                  type="text"
-                  value={customArgs}
-                  onChange={(e) => setCustomArgs(e.target.value)}
-                  placeholder="--tmdb movie/12345 --trackers ptp,aither"
-                  className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  disabled={isExecuting}
-                />
-
-                {/* Desc Link Input */}
-                {hasDescLink && (!descLinkUrl || descLinkFocused || descLinkError) && (
-                  <div className="space-y-1">
-                    <label className={`text-xs font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Description Link URL:</label>
-                    <input
-                      type="url"
-                      value={descLinkUrl}
-                      onChange={(e) => updateDescLink(e.target.value)}
-                      onFocus={() => setDescLinkFocused(true)}
-                      onBlur={() => setDescLinkFocused(false)}
-                      placeholder="https://pastebin.com/abc123"
-                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                        descLinkError
-                          ? 'border-red-500 focus:ring-red-500'
-                          : isDarkMode
-                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                            : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                      disabled={isExecuting}
-                    />
-                    {descLinkError && <p className="text-xs text-red-500">{descLinkError}</p>}
-                  </div>
-                )}
-
-                {hasDescFile && (descFileError || !descFilePath) && (
-                  <div className={`p-2 rounded-lg text-xs ${
-                    descFileError
-                      ? isDarkMode ? 'bg-red-900 border border-red-700 text-red-300' : 'bg-red-50 border border-red-200 text-red-700'
-                      : isDarkMode ? 'bg-yellow-900 border border-yellow-700 text-yellow-300' : 'bg-yellow-50 border border-yellow-200 text-yellow-700'
-                  }`}>
-                    {descFileError || 'Select a description file from the Files panel'}
-                  </div>
-                )}
-
-                {/* Execute & Kill buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={executeCommand}
-                    disabled={!selectedPath || isExecuting}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-                  >
-                    <PlayIcon />
-                    {isExecuting ? 'Executing...' : 'Execute Upload'}
-                  </button>
-                  <button
-                    onClick={clearTerminal}
-                    className={`flex items-center gap-1 px-3 py-3 rounded-lg transition-colors ${
-                      isExecuting
-                        ? 'bg-red-600 hover:bg-red-700 text-white'
-                        : 'bg-gray-600 hover:bg-gray-700 text-white'
-                    }`}
-                    title={isExecuting ? 'Kill process and clear terminal' : 'Clear terminal'}
-                  >
-                    <TrashIcon />
-                  </button>
-                </div>
-              </div>
-
-              {/* Terminal output */}
-              <div className={`flex-1 p-3 flex flex-col min-h-0 overflow-hidden ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
-                <div className="flex items-center gap-2 mb-2 flex-shrink-0">
-                  <span className={isDarkMode ? 'text-white' : 'text-gray-800'}><TerminalIcon /></span>
-                  <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Output</h3>
-                  {isExecuting && (
-                    <span className="ml-auto text-xs text-green-400 animate-pulse">● Running</span>
-                  )}
-                </div>
-                <div
-                  ref={richOutputRef}
-                  id="rich-output"
-                  className={`flex-1 rounded-lg overflow-auto p-2 border text-sm ${isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
-                ></div>
-                {isExecuting && (
-                  <div className="mt-2 flex gap-2">
-                    <input
-                      ref={inputRef}
-                      value={userInput}
-                      onChange={(e) => setUserInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendInput(sessionId, userInput); } }}
-                      placeholder="Type input and press Enter"
-                      className={`flex-1 px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                    />
+            {/* Top controls */}
+            <div className={`p-3 space-y-3 border-b flex-shrink-0 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              {selectedPath ? (
+                <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-200'} border`}>
+                  <div className="flex items-center justify-between">
+                    <p className={`text-xs font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Selected:</p>
                     <button
-                      onClick={() => sendInput(sessionId, userInput)}
-                      disabled={!sessionId || !userInput}
-                      className="px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 text-sm"
+                      onClick={() => setActivePanel('files')}
+                      className={`text-xs px-2 py-0.5 rounded ${isDarkMode ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
                     >
-                      Send
+                      Browse
                     </button>
                   </div>
-                )}
+                  <p className={`text-xs ${isDarkMode ? 'text-white' : 'text-gray-800'} break-all font-mono mt-1`}>{selectedPath}</p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setActivePanel('files')}
+                  className={`w-full p-3 rounded-lg border-2 border-dashed text-center inline-flex items-center justify-center ${isDarkMode ? 'border-gray-600 text-gray-400 hover:border-purple-500 hover:text-purple-400' : 'border-gray-300 text-gray-500 hover:border-purple-500 hover:text-purple-600'}`}
+                >
+                  <FolderIcon />
+                  <span className="text-sm ml-2">Tap to select a file or folder</span>
+                </button>
+              )}
+
+              {/* Args input */}
+              <input
+                type="text"
+                value={customArgs}
+                onChange={(e) => setCustomArgs(e.target.value)}
+                placeholder="--tmdb movie/12345 --trackers ptp,aither"
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                    : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                disabled={isExecuting}
+              />
+
+              {/* Desc Link Input */}
+              {hasDescLink && (!descLinkUrl || descLinkFocused || descLinkError) && (
+                <div className="space-y-1">
+                  <label className={`text-xs font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Description Link URL:</label>
+                  <input
+                    type="url"
+                    value={descLinkUrl}
+                    onChange={(e) => updateDescLink(e.target.value)}
+                    onFocus={() => setDescLinkFocused(true)}
+                    onBlur={() => setDescLinkFocused(false)}
+                    placeholder="https://pastebin.com/abc123"
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${descLinkError
+                        ? 'border-red-500 focus:ring-red-500'
+                        : isDarkMode
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    disabled={isExecuting}
+                  />
+                  {descLinkError && <p className="text-xs text-red-500">{descLinkError}</p>}
+                </div>
+              )}
+
+              {hasDescFile && (descFileError || !descFilePath) && (
+                <div className={`p-2 rounded-lg text-xs ${descFileError
+                    ? isDarkMode ? 'bg-red-900 border border-red-700 text-red-300' : 'bg-red-50 border border-red-200 text-red-700'
+                    : isDarkMode ? 'bg-yellow-900 border border-yellow-700 text-yellow-300' : 'bg-yellow-50 border border-yellow-200 text-yellow-700'
+                  }`}>
+                  {descFileError || 'Select a description file from the Files panel'}
+                </div>
+              )}
+
+              {/* Execute & Kill buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={executeCommand}
+                  disabled={!selectedPath || isExecuting}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                  <PlayIcon />
+                  {isExecuting ? 'Executing...' : 'Execute Upload'}
+                </button>
+                <button
+                  onClick={clearTerminal}
+                  className={`flex items-center gap-1 px-3 py-3 rounded-lg transition-colors ${isExecuting
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-gray-600 hover:bg-gray-700 text-white'
+                    }`}
+                  title={isExecuting ? 'Kill process and clear terminal' : 'Clear terminal'}
+                >
+                  <TrashIcon />
+                </button>
               </div>
             </div>
+
+            {/* Terminal output */}
+            <div className={`flex-1 p-3 flex flex-col min-h-0 overflow-hidden ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+              <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+                <span className={isDarkMode ? 'text-white' : 'text-gray-800'}><TerminalIcon /></span>
+                <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Output</h3>
+                {isExecuting && (
+                  <span className="ml-auto text-xs text-green-400 animate-pulse">● Running</span>
+                )}
+              </div>
+              <div
+                ref={richOutputRef}
+                id="rich-output"
+                className={`flex-1 rounded-lg overflow-auto p-2 border text-sm ${isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+              ></div>
+              {isExecuting && (
+                <div className="mt-2 flex gap-2">
+                  <input
+                    ref={inputRef}
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendInput(sessionId, userInput); } }}
+                    placeholder="Type input and press Enter"
+                    className={`flex-1 px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                  />
+                  <button
+                    onClick={() => sendInput(sessionId, userInput)}
+                    disabled={!sessionId || !userInput}
+                    className="px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 text-sm"
+                  >
+                    Send
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Args Panel */}
           {activePanel === 'args' && (
@@ -1616,11 +1608,10 @@ function AudionutsUAGUI() {
                     value={argSearchFilter}
                     onChange={(e) => setArgSearchFilter(e.target.value)}
                     placeholder="Search arguments..."
-                    className={`w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      isDarkMode
+                    className={`w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    }`}
+                      }`}
                   />
                   {argSearchFilter && (
                     <button
@@ -1636,22 +1627,20 @@ function AudionutsUAGUI() {
                 <div className="flex gap-2">
                   <button
                     onClick={collapseAllSections}
-                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                      isDarkMode
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                         : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
-                    }`}
+                      }`}
                   >
                     <CollapseAllIcon />
                     Collapse All
                   </button>
                   <button
                     onClick={expandAllSections}
-                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                      isDarkMode
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                         : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
-                    }`}
+                      }`}
                   >
                     <ExpandAllIcon />
                     Expand All
@@ -1669,9 +1658,8 @@ function AudionutsUAGUI() {
                     <div key={cat.title} className={`rounded-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                       <button
                         onClick={() => toggleSectionCollapse(cat.title)}
-                        className={`w-full flex items-center justify-between p-3 text-left transition-colors rounded-t-lg ${
-                          isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
-                        } ${collapsedSections.has(cat.title) ? 'rounded-b-lg' : ''}`}
+                        className={`w-full flex items-center justify-between p-3 text-left transition-colors rounded-t-lg ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
+                          } ${collapsedSections.has(cat.title) ? 'rounded-b-lg' : ''}`}
                       >
                         <div className="flex-1">
                           <div className={`text-sm font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-900'} flex items-center gap-2`}>
@@ -1740,7 +1728,7 @@ function AudionutsUAGUI() {
   return (
     <div className={`flex h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} overflow-hidden`}>
       {/* Left Sidebar - Resizable */}
-      <div 
+      <div
         className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-r flex flex-col`}
         style={{ width: `${sidebarWidth}px`, minWidth: '200px', maxWidth: '600px' }}
       >
@@ -1755,11 +1743,10 @@ function AudionutsUAGUI() {
               value={fileBrowserSearch}
               onChange={(e) => handleFileBrowserSearch(e.target.value)}
               placeholder="Search files and folders..."
-              className={`w-full pl-8 pr-8 py-1.5 text-sm rounded border ${
-                isDarkMode
+              className={`w-full pl-8 pr-8 py-1.5 text-sm rounded border ${isDarkMode
                   ? 'bg-gray-800 border-gray-600 text-gray-200 placeholder-gray-500 focus:border-purple-500'
                   : 'bg-white border-gray-300 text-gray-700 placeholder-gray-400 focus:border-blue-500'
-              } focus:outline-none focus:ring-1 ${isDarkMode ? 'focus:ring-purple-500' : 'focus:ring-blue-500'}`}
+                } focus:outline-none focus:ring-1 ${isDarkMode ? 'focus:ring-purple-500' : 'focus:ring-blue-500'}`}
             />
             <svg className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1797,11 +1784,11 @@ function AudionutsUAGUI() {
             renderFileTree(directories)
           )}
         </div>
-        
+
         {/* Description File Browser - shown when --descfile is in args */}
         {hasDescFile && (
           <>
-            <div 
+            <div
               className={`p-4 border-t ${!descBrowserCollapsed ? 'border-b' : ''} ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50'} ${descBrowserCollapsed ? 'cursor-pointer' : ''}`}
               onClick={descBrowserCollapsed ? () => setDescBrowserCollapsed(false) : undefined}
             >
@@ -1913,7 +1900,7 @@ function AudionutsUAGUI() {
                   Logout
                 </a>
               </div>
-              
+
               {/* Controls */}
               <div className="flex items-center gap-3">
                 <a
@@ -1927,14 +1914,12 @@ function AudionutsUAGUI() {
                 </span>
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    isDarkMode ? 'bg-purple-600' : 'bg-gray-300'
-                  }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isDarkMode ? 'bg-purple-600' : 'bg-gray-300'
+                    }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      isDarkMode ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                   />
                 </button>
               </div>
@@ -1956,15 +1941,14 @@ function AudionutsUAGUI() {
                 value={customArgs}
                 onChange={(e) => setCustomArgs(e.target.value)}
                 placeholder="--tmdb movie/12345 --trackers ptp,aither,ulcx --no-edition --no-tag"
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                  isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                     : 'bg-white border-gray-300 text-gray-900'
-                }`}
+                  }`}
                 disabled={isExecuting}
               />
             </div>
-            
+
             {/* Description Link URL Input - shown when --desclink is in args */}
             {/* Hide when valid URL and not focused; show when empty, focused, or invalid */}
             {hasDescLink && (!descLinkUrl || descLinkFocused || descLinkError) && (
@@ -1982,13 +1966,12 @@ function AudionutsUAGUI() {
                   onFocus={() => setDescLinkFocused(true)}
                   onBlur={() => setDescLinkFocused(false)}
                   placeholder="https://pastebin.com/abc123"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    descLinkError 
-                      ? 'border-red-500 focus:ring-red-500' 
-                      : isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${descLinkError
+                      ? 'border-red-500 focus:ring-red-500'
+                      : isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                         : 'bg-white border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                   disabled={isExecuting}
                 />
                 {descLinkError && (
@@ -1999,31 +1982,28 @@ function AudionutsUAGUI() {
                 )}
               </div>
             )}
-            
+
             {/* Description File Status - only show on error or when no file selected */}
             {hasDescFile && (descFileError || !descFilePath) && (
-              <div className={`p-3 rounded-lg ${
-                descFileError 
+              <div className={`p-3 rounded-lg ${descFileError
                   ? isDarkMode ? 'bg-red-900 border border-red-700' : 'bg-red-50 border border-red-200'
                   : isDarkMode ? 'bg-yellow-900 border border-yellow-700' : 'bg-yellow-50 border border-yellow-200'
-              }`}>
+                }`}>
                 <div className="flex items-center gap-2">
-                  <svg className={`w-4 h-4 ${
-                    descFileError ? 'text-red-500' : 'text-yellow-500'
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 ${descFileError ? 'text-red-500' : 'text-yellow-500'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     {descFileError ? (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     ) : (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     )}
                   </svg>
-                  <span className={`text-sm font-medium ${
-                    descFileError 
+                  <span className={`text-sm font-medium ${descFileError
                       ? isDarkMode ? 'text-red-300' : 'text-red-700'
                       : isDarkMode ? 'text-yellow-300' : 'text-yellow-700'
-                  }`}>
-                    {descFileError 
-                      ? 'Invalid description file path' 
+                    }`}>
+                    {descFileError
+                      ? 'Invalid description file path'
                       : 'Select a description file from the left panel or enter a path'}
                   </span>
                 </div>
@@ -2052,11 +2032,10 @@ function AudionutsUAGUI() {
               </button>
               <button
                 onClick={clearTerminal}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-colors ${
-                  isExecuting 
-                    ? 'bg-red-600 hover:bg-red-700 text-white' 
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-colors ${isExecuting
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
                     : 'bg-gray-600 hover:bg-gray-700 text-white'
-                }`}
+                  }`}
                 title={isExecuting ? 'Kill process and clear terminal' : 'Clear terminal'}
               >
                 <TrashIcon />
@@ -2123,7 +2102,7 @@ function AudionutsUAGUI() {
             Arguments
           </h2>
         </div>
-        
+
         {/* Search and Collapse Controls */}
         <div className={`p-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} space-y-2`}>
           {/* Search Input */}
@@ -2136,11 +2115,10 @@ function AudionutsUAGUI() {
               value={argSearchFilter}
               onChange={(e) => setArgSearchFilter(e.target.value)}
               placeholder="Search arguments..."
-              className={`w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+              className={`w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-              }`}
+                }`}
             />
             {argSearchFilter && (
               <button
@@ -2153,34 +2131,32 @@ function AudionutsUAGUI() {
               </button>
             )}
           </div>
-          
+
           {/* Collapse/Expand All Buttons */}
           <div className="flex gap-2">
             <button
               onClick={collapseAllSections}
-              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' 
+              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                   : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
-              }`}
+                }`}
             >
               <CollapseAllIcon />
               Collapse All
             </button>
             <button
               onClick={expandAllSections}
-              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' 
+              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                   : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
-              }`}
+                }`}
             >
               <ExpandAllIcon />
               Expand All
             </button>
           </div>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {filteredCategories.length === 0 ? (
             <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -2192,11 +2168,10 @@ function AudionutsUAGUI() {
                 {/* Collapsible Section Header */}
                 <button
                   onClick={() => toggleSectionCollapse(cat.title)}
-                  className={`w-full flex items-center justify-between p-3 text-left transition-colors rounded-t-lg ${
-                    isDarkMode 
-                      ? 'hover:bg-gray-700' 
+                  className={`w-full flex items-center justify-between p-3 text-left transition-colors rounded-t-lg ${isDarkMode
+                      ? 'hover:bg-gray-700'
                       : 'hover:bg-gray-50'
-                  } ${collapsedSections.has(cat.title) ? 'rounded-b-lg' : ''}`}
+                    } ${collapsedSections.has(cat.title) ? 'rounded-b-lg' : ''}`}
                 >
                   <div className="flex-1">
                     <div className={`text-sm font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-900'} flex items-center gap-2`}>
@@ -2213,7 +2188,7 @@ function AudionutsUAGUI() {
                     )}
                   </div>
                 </button>
-                
+
                 {/* Collapsible Section Content */}
                 {!collapsedSections.has(cat.title) && (
                   <div className={`px-3 pb-3 pt-2 ${isDarkMode ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>

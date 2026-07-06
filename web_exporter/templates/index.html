@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload-Assistant qBittorrent Exporter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container mt-5 mb-5">
+        <!-- Nút chọn ngôn ngữ -->
+        <div class="d-flex justify-content-end mb-2">
+            <select class="form-select form-select-sm w-auto" id="langSelect" onchange="changeLanguage(this.value)">
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="header-brand text-center">
+                        <h2 data-lang="title">🚀 qBittorrent Queue Exporter</h2>
+                        <p class="mb-0" data-lang="subtitle">Xuất torrent vào hàng đợi Upload-Assistant</p>
+                    </div>
+                    <div class="card-body p-4">
+
+                        <!-- PANE CÀI ĐẶT -->
+                        <div class="accordion mb-4" id="settingsAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button {% if has_config %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="{% if has_config %}false{% else %}true{% endif %}">
+                                        <span data-lang="settings_title">⚙️ Cài đặt Kết nối qBittorrent API (WebUI)</span>
+                                    </button>
+                                </h2>
+                                <div id="collapseOne" class="accordion-collapse collapse {% if not has_config %}show{% endif %}" data-bs-parent="#settingsAccordion">
+                                    <div class="accordion-body">
+                                        <form id="configForm">
+                                            <div class="mb-3">
+                                                <label class="form-label" data-lang="url_label">URL WebUI (Mặc định: http://localhost:8080)</label>
+                                                <input type="text" class="form-control" name="host" value="{{ config.host }}" placeholder="http://127.0.0.1:8080" required>
+                                            </div>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label" data-lang="user_label">Tài khoản (Username)</label>
+                                                    <input type="text" class="form-control" name="username" value="{{ config.username }}" placeholder="admin">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label" data-lang="pass_label">Mật khẩu (Password)</label>
+                                                    <input type="password" class="form-control" name="password" value="{{ config.password }}" placeholder="adminadmin">
+                                                </div>
+                                            </div>
+                                            <div class="mt-3 text-end">
+                                                <button type="button" class="btn btn-info text-white" id="testApiBtn">
+                                                    <span class="spinner-border spinner-border-sm loading" role="status" aria-hidden="true" id="testLoading"></span>
+                                                    <span data-lang="btn_test">Kiểm tra Kết nối</span>
+                                                </button>
+                                                <button type="submit" class="btn btn-secondary" data-lang="btn_save">Lưu cài đặt &amp; Tải lại</button>
+                                            </div>
+                                            <div id="testResult" class="mt-2" style="display: none;"></div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trạng thái kết nối -->
+                        <div class="alert {% if qbit_status == 'OK' %}alert-success{% else %}alert-danger{% endif %}" role="alert">
+                            <span data-lang="api_status">Trạng thái API:</span> <strong id="dynamic_status">{{ qbit_status }}</strong>
+                        </div>
+
+                        {% if qbit_status == 'OK' %}
+                        <!-- PANE XUẤT QUEUE CHÍNH -->
+                        <form id="exportForm">
+                            <!-- Row 1: Category + Queue Name -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <label class="form-label fw-bold mb-0 me-2" data-lang="cat_label">1. Chọn Danh mục</label>
+                                        <div class="btn-group btn-group-sm" role="group" id="categoryModeGroup">
+                                            <input type="radio" class="btn-check" name="category_mode" id="catModeInclude" value="include" checked autocomplete="off">
+                                            <label class="btn btn-outline-success" for="catModeInclude" data-lang="mode_include">✅ Include</label>
+                                            <input type="radio" class="btn-check" name="category_mode" id="catModeExclude" value="exclude" autocomplete="off">
+                                            <label class="btn btn-outline-danger" for="catModeExclude" data-lang="mode_exclude">🚫 Exclude</label>
+                                        </div>
+                                    </div>
+                                    <select class="form-select" name="categories" id="categoriesSelect" multiple style="height: 130px;">
+                                        <option value="ALL_WITHOUT_CATEGORY" data-lang="cat_all">🌐 Tất cả torrent</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}">{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold" data-lang="queue_label">2. Nhập Tên Queue Log</label>
+                                    <input type="text" class="form-control" name="queue_name" value="vmf" required>
+                                    <div class="form-text" data-lang="queue_hint">Tên file log, ví dụ: 'vmf' -> vmf_queue.log</div>
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Status Filter + Sort -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold" data-lang="status_filter_label">📋 Trạng thái</label>
+                                    <select class="form-select" name="status_filter" id="statusFilter">
+                                        {% for sf in status_filters %}
+                                        <option value="{{ sf }}" {% if sf == 'completed' %}selected{% endif %}>{{ sf }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold" data-lang="sort_label">🔀 Sắp xếp</label>
+                                    <select class="form-select" name="sort" id="sortField">
+                                        {% for sf in sort_fields %}
+                                        <option value="{{ sf }}" {% if sf == 'added_on' %}selected{% endif %}>{{ sf }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch mt-4 pt-2">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="reverseSort" name="reverse">
+                                        <label class="form-check-label" for="reverseSort" data-lang="reverse_label">Đảo thứ tự</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if tags %}
+                            <!-- Row 3: Tags -->
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center mb-1">
+                                    <label class="form-label fw-bold mb-0 me-2" data-lang="tag_label">🏷️ Tags</label>
+                                    <div class="btn-group btn-group-sm" role="group" id="tagModeGroup">
+                                        <input type="radio" class="btn-check" name="tag_mode" id="tagModeInclude" value="include" checked autocomplete="off">
+                                        <label class="btn btn-outline-success" for="tagModeInclude" data-lang="mode_include">✅ Include</label>
+                                        <input type="radio" class="btn-check" name="tag_mode" id="tagModeExclude" value="exclude" autocomplete="off">
+                                        <label class="btn btn-outline-danger" for="tagModeExclude" data-lang="mode_exclude">🚫 Exclude</label>
+                                    </div>
+                                </div>
+                                <select class="form-select" name="tags" id="tagsSelect" multiple style="height: 80px;">
+                                    {% for tag in tags %}
+                                    <option value="{{ tag }}">{{ tag }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            {% if trackers %}
+                            <!-- Tracker Filter -->
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center mb-1">
+                                    <label class="form-label fw-bold mb-0 me-2" data-lang="tracker_label">📡 Tracker</label>
+                                    <div class="btn-group btn-group-sm" role="group" id="trackerModeGroup">
+                                        <input type="radio" class="btn-check" name="tracker_mode" id="trackerModeInclude" value="include" autocomplete="off">
+                                        <label class="btn btn-outline-success" for="trackerModeInclude" data-lang="mode_include">✅ Include</label>
+                                        <input type="radio" class="btn-check" name="tracker_mode" id="trackerModeExclude" value="exclude" checked autocomplete="off">
+                                        <label class="btn btn-outline-danger" for="trackerModeExclude" data-lang="mode_exclude">🚫 Exclude</label>
+                                    </div>
+                                </div>
+                                <select class="form-select" name="trackers" id="trackersSelect" multiple style="height: 100px;">
+                                    {% for tracker in trackers %}
+                                    <option value="{{ tracker }}">{{ tracker }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text" data-lang="tracker_hint">Include: chỉ giữ torrent thuộc tracker đã chọn. Exclude: bỏ qua torrent thuộc tracker đã chọn.</div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Advanced Filters (collapsible) -->
+                            <div class="accordion mb-3" id="advancedFiltersAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="false">
+                                            <span data-lang="advanced_filters">🔧 Bộ lọc nâng cao</span>
+                                        </button>
+                                    </h2>
+                                    <div id="advancedFilters" class="accordion-collapse collapse">
+                                        <div class="accordion-body">
+                                            <!-- Size filters -->
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label" data-lang="min_size_label">📏 Kích thước tối thiểu</label>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" name="min_size_value" id="minSizeValue" placeholder="0" min="0" step="0.1">
+                                                        <select class="form-select" name="min_size_unit" id="minSizeUnit" style="max-width: 80px;">
+                                                            <option value="MB">MB</option>
+                                                            <option value="GB" selected>GB</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label" data-lang="max_size_label">📏 Kích thước tối đa</label>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" name="max_size_value" id="maxSizeValue" placeholder="∞" min="0" step="0.1">
+                                                        <select class="form-select" name="max_size_unit" id="maxSizeUnit" style="max-width: 80px;">
+                                                            <option value="MB">MB</option>
+                                                            <option value="GB" selected>GB</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Date filter -->
+                                            <div class="mb-3">
+                                                <label class="form-label" data-lang="added_after_label">📅 Chỉ lấy torrent thêm sau ngày</label>
+                                                <input type="date" class="form-control" name="added_after_date" id="addedAfterDate">
+                                            </div>
+
+                                            <!-- Name pattern -->
+                                            <div class="mb-3">
+                                                <label class="form-label" data-lang="name_pattern_label">🔍 Lọc theo tên (regex hoặc substring)</label>
+                                                <input type="text" class="form-control" name="name_pattern" id="namePattern" placeholder=".*1080p.*">
+                                            </div>
+
+                                            <!-- Limit -->
+                                            <div class="mb-3">
+                                                <label class="form-label" data-lang="limit_label">🔢 Giới hạn số torrent</label>
+                                                <input type="number" class="form-control" name="limit" id="limitInput" placeholder="Không giới hạn" min="1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg" id="exportBtn">
+                                    <span class="spinner-border spinner-border-sm loading" role="status" aria-hidden="true" id="exportLoading"></span>
+                                    🚀 <span data-lang="btn_export">Kéo dữ liệu và Đưa vào Hàng đợi</span>
+                                </button>
+                            </div>
+                        </form>
+
+                        <hr class="my-4">
+                        <div class="card bg-light border-secondary mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title" data-lang="run_title">▶️ Chạy Upload Assistant</h5>
+                                <p class="card-text text-muted" style="font-size: 0.9em;" data-lang="run_desc">
+                                    Sau khi xuất hàng đợi thành công, bạn có thể chạy <kbd>upload.py</kbd> ngay tại đây. Script sẽ tự động thêm <code>--queue [Tên Queue]</code> vào câu lệnh.
+                                </p>
+                                <form id="runForm">
+                                    <label class="form-label fw-bold" data-lang="args_label">Tham số tùy chỉnh (Arguments):</label>
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text bg-dark text-white font-monospace">py upload.py "queue-mode"</span>
+                                        <input type="text" class="form-control font-monospace" id="customArgs" name="args" value="-tk vmf -ua" placeholder="-tk vmf -ua">
+                                        <span class="input-group-text bg-dark text-white font-monospace" id="queueArgText">--queue vmf</span>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="openExternalCmd" name="open_external">
+                                        <label class="form-check-label" for="openExternalCmd" data-lang="open_external">Mở trong cửa sổ CMD riêng (không xem log trên web)</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100" id="runBtn">
+                                        <span class="spinner-border spinner-border-sm loading" role="status" aria-hidden="true" id="runLoading"></span>
+                                        🎬 <span data-lang="btn_run">Bắt đầu Chạy Upload ngay trên Web</span>
+                                    </button>
+                                </form>
+                                <div id="terminalBox" class="terminal-box mt-3"></div>
+                                <div id="stdinRow" class="mt-2" style="display: none;">
+                                    <label class="form-label small text-muted" data-lang="stdin_label">Gửi lệnh tới upload.py (stdin):</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control font-monospace" id="stdinInput" placeholder="Nhập lệnh rồi Enter hoặc bấm Gửi..." data-lang-placeholder="stdin_placeholder" autocomplete="off">
+                                        <button type="button" class="btn btn-outline-secondary" id="stdinSendBtn" data-lang="stdin_send">Gửi</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+
+                <!-- Hiển thị kết quả -->
+                <div id="resultBox" class="mt-4" style="display: none;">
+                    <div class="alert alert-info" id="resultText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/terminal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

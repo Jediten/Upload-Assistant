@@ -99,9 +99,24 @@ class CustomTorrent(torf.Torrent):
 
 class TorrentCreator:
     # Limit concurrent torrent creation to avoid heavy parallel hashing
-    _create_torrent_semaphore = asyncio.Semaphore(1)
+    _create_torrent_semaphore: Optional[asyncio.Semaphore] = None
     _create_torrent_inflight = 0
     _torf_start_time = time.time()
+
+    @classmethod
+    def _get_semaphore(cls) -> asyncio.Semaphore:
+        """Lazily create the semaphore in the current event loop."""
+        loop = asyncio.get_running_loop()
+        # Recreate if not yet created or if bound to a stale/different loop
+        if cls._create_torrent_semaphore is None:
+            cls._create_torrent_semaphore = asyncio.Semaphore(1)
+        else:
+            try:
+                # Check if the existing semaphore is still valid for this loop
+                cls._create_torrent_semaphore._get_loop()  # noqa: SLF001
+            except RuntimeError:
+                cls._create_torrent_semaphore = asyncio.Semaphore(1)
+        return cls._create_torrent_semaphore
 
     @staticmethod
     def calculate_piece_size(
@@ -195,13 +210,14 @@ class TorrentCreator:
         piece_size: int = 0,
     ) -> Union[str, Torrent]:
         # Ensure only one torrent creation runs at a time
+        semaphore = cls._get_semaphore()
         wait_started: Optional[float] = None
-        if cls._create_torrent_semaphore.locked():
+        if semaphore.locked():
             wait_started = time.time()
             if meta.get('debug', False):
                 console.print("[yellow]Waiting for create_torrent slot...[/yellow]")
 
-        async with cls._create_torrent_semaphore:
+        async with semaphore:
             cls._create_torrent_inflight += 1
             if meta.get('debug', False):
                 wait_msg = ""

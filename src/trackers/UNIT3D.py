@@ -186,7 +186,14 @@ class UNIT3D:
         return dupes
 
     async def get_name(self, meta: dict[str, Any]) -> dict[str, str]:
-        return {"name": meta["name"]}
+        name = meta["name"]
+        if len(name) > 255 and meta.get("aka", ""):
+            aka = str(meta["aka"])
+            name = name.replace(f" {aka}", "").replace(f"{aka} ", "").replace(aka, "")
+            name = ' '.join(name.split())
+        if len(name) > 255:
+            name = name[:255]
+        return {"name": name}
 
     async def get_description(self, meta: dict[str, Any]) -> dict[str, str]:
         return {

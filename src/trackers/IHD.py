@@ -29,6 +29,11 @@ class IHD(UNIT3D):
         self.banned_groups = []
         pass
 
+    async def get_additional_data(self, meta: Meta) -> dict[str, str]:
+        return {
+            'mod_queue_opt_in': await self.get_flag(meta, 'modq'),
+        }
+
     async def get_category_id(
         self,
         meta: Meta,

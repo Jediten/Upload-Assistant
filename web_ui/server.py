@@ -113,11 +113,15 @@ def _sanitize_relpath(rel: str) -> str:
     return os.sep.join(clean_parts)
 
 
-def _assert_safe_resolved_path(path: str) -> None:
-    """Assert that a resolved path is safe and within configured browse roots.
+def _assert_safe_resolved_path(path: str, *, skip_roots: bool = False) -> None:
+    """Assert that a resolved path is safe and optionally within configured browse roots.
 
     Raises ValueError if the path is unsafe. This provides an explicit,
     local check at call sites to satisfy static analysis tools.
+
+    Args:
+        path: The path to validate
+        skip_roots: If True, skip browse roots validation (for My Computer paths)
     """
     if not path or "\x00" in path:
         raise ValueError("Invalid path")
@@ -125,6 +129,12 @@ def _assert_safe_resolved_path(path: str) -> None:
     # Ensure absolute and normalized
     abs_path = os.path.abspath(path)
     real_path = os.path.realpath(abs_path)
+
+    # If skip_roots, only do basic safety checks
+    if skip_roots:
+        if not os.path.isabs(real_path):
+            raise ValueError("Path must be absolute")
+        return
 
     roots = _get_browse_roots()
     if not roots:
@@ -1659,9 +1669,10 @@ def _resolve_user_path(
     *,
     require_exists: bool = True,
     require_dir: bool = False,
+    allow_any_path: bool = False,
 ) -> str:
     roots = _get_browse_roots()
-    if not roots:
+    if not roots and not allow_any_path:
         raise ValueError("Browsing is not configured")
 
     default_root = roots[0]
@@ -1684,6 +1695,21 @@ def _resolve_user_path(
     # Enforce a realpath+commonpath constraint to prevent symlink escapes.
     matched_root: Union[str, None] = None
     candidate_norm: Union[str, None] = None
+
+    # allow_any_path mode: skip browse roots validation, just validate path safety
+    if allow_any_path and expanded and os.path.isabs(expanded):
+        candidate_norm = os.path.normpath(expanded)
+        candidate_real = os.path.realpath(candidate_norm)
+        if '\x00' in candidate_real:
+            raise ValueError("Browsing this path is not allowed")
+
+        if require_exists and not os.path.exists(candidate_real):
+            raise ValueError("Path does not exist")
+
+        if require_dir and not os.path.isdir(candidate_real):
+            raise ValueError("Not a directory")
+
+        return candidate_real
 
     if expanded and os.path.isabs(expanded):
         # If a user supplies an absolute path, only allow it if it is under
@@ -2721,6 +2747,133 @@ def api_tokens():
         return jsonify({"success": False, "error": "Failed to revoke token"}), 500
 
 
+@app.route("/api/drives")
+def get_drives():
+    """Return available drives on Windows (for My Computer feature)"""
+    import platform
+
+    # Require session-based authentication
+    if not _is_authenticated():
+        return jsonify({"success": False, "error": "Authentication required (web session)"}), 401
+    if not _verify_csrf_header() or not _verify_same_origin():
+        return jsonify({"success": False, "error": "CSRF/Origin validation failed"}), 403
+
+    drives: list[BrowseItem] = []
+
+    if platform.system() == "Windows":
+        import string
+        from ctypes import windll  # type: ignore
+
+        # Get available drive letters
+        bitmask = windll.kernel32.GetLogicalDrives()
+        for letter in string.ascii_uppercase:
+            if bitmask & 1:
+                drive_path = f"{letter}:\\"
+                try:
+                    # Check if drive is accessible
+                    if os.path.exists(drive_path):
+                        drives.append({
+                            "name": f"{letter}:",
+                            "path": drive_path,
+                            "type": "folder",
+                            "children": []
+                        })
+                except Exception:
+                    pass
+            bitmask >>= 1
+    else:
+        # For Linux/macOS, just return root
+        drives.append({
+            "name": "/",
+            "path": "/",
+            "type": "folder",
+            "children": []
+        })
+
+    return jsonify({
+        "items": drives,
+        "success": True
+    })
+
+
+@app.route("/api/browse_drive")
+def browse_drive_path():
+    """Browse filesystem paths directly (for My Computer feature)"""
+    import platform
+
+    # Require session-based authentication
+    if not _is_authenticated():
+        return jsonify({"success": False, "error": "Authentication required (web session)"}), 401
+    if not _verify_csrf_header() or not _verify_same_origin():
+        return jsonify({"success": False, "error": "CSRF/Origin validation failed"}), 403
+
+    requested = request.args.get("path", "")
+
+    if not requested:
+        return jsonify({"error": "Path is required", "success": False}), 400
+
+    # Validate path on Windows
+    if platform.system() == "Windows":
+        # Normalize path
+        path = os.path.normpath(requested)
+
+        # Check if it's a valid drive path
+        if not os.path.isabs(path):
+            return jsonify({"error": "Invalid path", "success": False}), 400
+
+        if not os.path.exists(path):
+            return jsonify({"error": "Path does not exist", "success": False}), 400
+
+        if not os.path.isdir(path):
+            return jsonify({"error": "Not a directory", "success": False}), 400
+    else:
+        path = os.path.normpath(requested)
+        if not os.path.exists(path) or not os.path.isdir(path):
+            return jsonify({"error": "Invalid path", "success": False}), 400
+
+    console.print(f"Browsing drive path: {path}", markup=False)
+
+    try:
+        items: list[BrowseItem] = []
+        try:
+            for item in sorted(os.listdir(path)):
+                # Skip hidden files
+                if item.startswith("."):
+                    continue
+
+                full_path = os.path.join(path, item)
+                try:
+                    is_dir = os.path.isdir(full_path)
+
+                    items.append({
+                        "name": item,
+                        "path": full_path,
+                        "type": "folder" if is_dir else "file",
+                        "children": [] if is_dir else None
+                    })
+                except (PermissionError, OSError):
+                    continue
+
+            console.print(f"Found {len(items)} items in {path}", markup=False)
+
+        except PermissionError:
+            console.print(f"Error: Permission denied: {path}", markup=False)
+            return jsonify({"error": "Permission denied", "success": False}), 403
+
+        return jsonify({
+            "items": items,
+            "success": True,
+            "path": path,
+            "count": len(items)
+        })
+
+    except Exception as e:
+        console.print(f"Error browsing {path}: {e}", markup=False)
+        console.print(traceback.format_exc(), markup=False)
+        return jsonify({"error": "Error browsing path", "success": False}), 500
+
+
+
 @app.route("/api/browse")
 def browse_path():
     """Browse filesystem paths"""
@@ -3050,13 +3203,15 @@ def execute_command():
         def generate():
             try:
                 # Build command to run upload.py directly
-                validated_path = _resolve_user_path(path, require_exists=True, require_dir=False)
+                # allow_any_path=True enables execution from My Computer paths
+                # (not just configured browse roots)
+                validated_path = _resolve_user_path(path, require_exists=True, require_dir=False, allow_any_path=True)
 
                 # Additional explicit assertion for static analysis: ensure the
-                # resolved path is within allowed browse roots and contains no
-                # invalid characters before using it in commands/subprocesses.
+                # resolved path contains no invalid characters before using it
+                # in commands/subprocesses. skip_roots=True since we allow any path.
                 try:
-                    _assert_safe_resolved_path(validated_path)
+                    _assert_safe_resolved_path(validated_path, skip_roots=True)
                 except ValueError:
                     yield f"data: {json.dumps({'type': 'error', 'data': 'Invalid execution path'})}\n\n"
                     return

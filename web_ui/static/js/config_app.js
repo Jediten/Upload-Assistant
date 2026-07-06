@@ -178,7 +178,7 @@ const apiFetch = (typeof window !== 'undefined' && window.uaApiFetch) || (async 
 });
 
 // Use shared loader when available; otherwise provide a no-op fallback.
-const loadCsrfToken = (typeof window !== 'undefined' && window.loadCsrfToken) || (async () => {});
+const loadCsrfToken = (typeof window !== 'undefined' && window.loadCsrfToken) || (async () => { });
 
 const sensitiveKeyPattern = /(api|username|password|announce_url|rss_key|passkey|discord_bot_token|discord_channel_id|qui_proxy_url)/i;
 const isSensitiveKey = (key) => sensitiveKeyPattern.test(key || '');
@@ -276,6 +276,7 @@ const trackerNameMap = {
   'TVC': 'TVChaosUK',
   'ULCX': 'ULCX',
   'UTP': 'UTOPIA',
+  'VMF': 'VietMediaF',
   'YOINK': 'YOiNKED',
   'YUS': 'YUSCENE'
 };
@@ -944,9 +945,8 @@ function ConfigLeaf({
                 selected.map(client => (
                   <span
                     key={client}
-                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs ${
-                      isDarkMode ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-800'
-                    }`}
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs ${isDarkMode ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-800'
+                      }`}
                   >
                     {client}
                     <button
@@ -963,9 +963,8 @@ function ConfigLeaf({
             <span className={`transition-transform ${isOpen ? 'rotate-180' : 'rotate-0'}`}>▼</span>
           </div>
           {isOpen && (
-            <div className={`absolute z-10 w-full mt-1 border rounded-md shadow-lg max-h-60 overflow-auto ${
-              isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'
-            }`}>
+            <div className={`absolute z-10 w-full mt-1 border rounded-md shadow-lg max-h-60 overflow-auto ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'
+              }`}>
               {torrentClients.length === 0 ? (
                 <div className={`px-3 py-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   No torrent clients configured
@@ -974,18 +973,16 @@ function ConfigLeaf({
                 torrentClients.map((client) => (
                   <div
                     key={client}
-                    className={`px-3 py-2 cursor-pointer hover:${
-                      isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
-                    } ${selected.includes(client) ? (isDarkMode ? 'bg-purple-900' : 'bg-purple-50') : ''}`}
+                    className={`px-3 py-2 cursor-pointer hover:${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+                      } ${selected.includes(client) ? (isDarkMode ? 'bg-purple-900' : 'bg-purple-50') : ''}`}
                     onClick={() => toggleClient(client)}
                   >
-                    <label className={`flex items-center gap-2 text-sm cursor-pointer ${
-                      isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                    }`}>
+                    <label className={`flex items-center gap-2 text-sm cursor-pointer ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                      }`}>
                       <input
                         type="checkbox"
                         checked={selected.includes(client)}
-                        onChange={() => {}} // Handled by parent div
+                        onChange={() => { }} // Handled by parent div
                         className={isDarkMode ? 'h-4 w-4 accent-purple-500' : 'h-4 w-4 accent-purple-600'}
                       />
                       {client}
@@ -1304,14 +1301,14 @@ function ItemList({
                           <div key={tr} className="mb-2">
                             <div className="flex items-center justify-between">
                               <button
-                              type="button"
-                              onClick={() => toggleGroup(groupKey)}
-                              aria-expanded={isOpen}
-                              className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}
-                            >
-                              <span className={isDarkMode ? 'text-xs font-mono text-purple-300' : 'text-xs font-mono text-purple-700'}>{getTrackerDisplayName(tr)}</span>
-                              <span className="transition-transform" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>&gt;</span>
-                            </button>
+                                type="button"
+                                onClick={() => toggleGroup(groupKey)}
+                                aria-expanded={isOpen}
+                                className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}
+                              >
+                                <span className={isDarkMode ? 'text-xs font-mono text-purple-300' : 'text-xs font-mono text-purple-700'}>{getTrackerDisplayName(tr)}</span>
+                                <span className="transition-transform" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>&gt;</span>
+                              </button>
                             </div>
                             {isOpen && (
                               <div className={`rounded-lg border p-3 mt-2 ${isDarkMode ? 'border-gray-700 bg-gray-900/20' : 'border-gray-200 bg-white'}`}>
@@ -1439,58 +1436,58 @@ function ItemList({
                               <span className={isDarkMode ? 'text-xs font-mono text-gray-200' : 'text-xs font-mono text-gray-700'}>{getTrackerDisplayName(t)}</span>
                               <span className="transition-transform" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>&gt;</span>
                             </button>
-                              {isOpen && (
-                                <div className={`rounded-lg border p-3 mt-2 ${isDarkMode ? 'border-gray-700 bg-gray-900/20' : 'border-gray-200 bg-white'}`}>
-                                  <ItemList
-                                    items={subsection.children}
-                                    pathParts={[...pathParts, subsection.key]}
-                                    depth={depth + 1}
-                                    isDarkMode={isDarkMode}
-                                    allImageHosts={allImageHosts}
-                                    usedImageHosts={usedImageHosts}
-                                    fullWidth={true}
-                                    expandedGroups={expandedGroups}
-                                    toggleGroup={toggleGroup}
-                                    torrentClients={torrentClients}
-                                    onValueChange={onValueChange}
-                                  />
-                                  <div className="mt-2">
-                                    <label className="inline-flex items-center text-xs mr-2">
-                                      <input
-                                        type="checkbox"
-                                        checked={isInDefault || isPending}
-                                        onChange={async (e) => {
-                                          const checked = e.target.checked;
-                                          const nextPending = new Set(pendingDefaultAdds);
-                                          if (checked) {
-                                            nextPending.add(t);
-                                          } else {
-                                            nextPending.delete(t);
-                                          }
-                                          setPendingDefaultAdds(nextPending);
-                                          // Compute next default trackers value and queue change
-                                          const nextDefaultSet = new Set(selectedFromDefault || []);
-                                          for (const x of nextPending) nextDefaultSet.add(x);
-                                          // If user unchecked an already-selected default, remove it
-                                          if (!checked && selectedFromDefault && selectedFromDefault.has(t)) {
-                                            nextDefaultSet.delete(t);
-                                          }
-                                          const nextDefault = Array.from(nextDefaultSet).join(', ');
-                                          const originalDefault = normalizeTrackers(defaultTrackersItem.value).join(', ');
-                                          onValueChange([...pathParts, 'default_trackers'], nextDefault, {
-                                            originalValue: originalDefault,
-                                            isSensitive: false,
-                                            isRedacted: false,
-                                            readOnly: false
-                                          });
-                                        }}
-                                        className="h-4 w-4 mr-2"
-                                      />
-                                      <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Add to default trackers</span>
-                                    </label>
-                                  </div>
+                            {isOpen && (
+                              <div className={`rounded-lg border p-3 mt-2 ${isDarkMode ? 'border-gray-700 bg-gray-900/20' : 'border-gray-200 bg-white'}`}>
+                                <ItemList
+                                  items={subsection.children}
+                                  pathParts={[...pathParts, subsection.key]}
+                                  depth={depth + 1}
+                                  isDarkMode={isDarkMode}
+                                  allImageHosts={allImageHosts}
+                                  usedImageHosts={usedImageHosts}
+                                  fullWidth={true}
+                                  expandedGroups={expandedGroups}
+                                  toggleGroup={toggleGroup}
+                                  torrentClients={torrentClients}
+                                  onValueChange={onValueChange}
+                                />
+                                <div className="mt-2">
+                                  <label className="inline-flex items-center text-xs mr-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={isInDefault || isPending}
+                                      onChange={async (e) => {
+                                        const checked = e.target.checked;
+                                        const nextPending = new Set(pendingDefaultAdds);
+                                        if (checked) {
+                                          nextPending.add(t);
+                                        } else {
+                                          nextPending.delete(t);
+                                        }
+                                        setPendingDefaultAdds(nextPending);
+                                        // Compute next default trackers value and queue change
+                                        const nextDefaultSet = new Set(selectedFromDefault || []);
+                                        for (const x of nextPending) nextDefaultSet.add(x);
+                                        // If user unchecked an already-selected default, remove it
+                                        if (!checked && selectedFromDefault && selectedFromDefault.has(t)) {
+                                          nextDefaultSet.delete(t);
+                                        }
+                                        const nextDefault = Array.from(nextDefaultSet).join(', ');
+                                        const originalDefault = normalizeTrackers(defaultTrackersItem.value).join(', ');
+                                        onValueChange([...pathParts, 'default_trackers'], nextDefault, {
+                                          originalValue: originalDefault,
+                                          isSensitive: false,
+                                          isRedacted: false,
+                                          readOnly: false
+                                        });
+                                      }}
+                                      className="h-4 w-4 mr-2"
+                                    />
+                                    <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Add to default trackers</span>
+                                  </label>
                                 </div>
-                              )}
+                              </div>
+                            )}
                           </div>
                         );
                       }
@@ -1595,7 +1592,7 @@ function ItemList({
         </div>
       )}
 
-      
+
 
       {/* Subsections */}
       {subsections.map((item) => {
@@ -1717,10 +1714,10 @@ function showConfirmModal(opts) {
     okBtn.focus();
 
     function cleanup(result) {
-        try { document.body.removeChild(overlay); } catch (e) { /* ignore */ }
-        try { window.removeEventListener('keydown', keyHandler); } catch (e) { /* ignore */ }
-        resolve(result);
-      }
+      try { document.body.removeChild(overlay); } catch (e) { /* ignore */ }
+      try { window.removeEventListener('keydown', keyHandler); } catch (e) { /* ignore */ }
+      resolve(result);
+    }
 
     cancelBtn.addEventListener('click', () => cleanup(false));
     okBtn.addEventListener('click', () => cleanup(true));
@@ -1755,8 +1752,8 @@ function SecurityTab({ isDarkMode }) {
   const [createdTokenRaw, setCreatedTokenRaw] = useState(null);
   const [tokenMessage, setTokenMessage] = useState('');
   const [createdTokenCopied, setCreatedTokenCopied] = useState(false);
-  
-  
+
+
 
   useEffect(() => {
     loadTwofaStatus();
@@ -1984,7 +1981,7 @@ function SecurityTab({ isDarkMode }) {
   return (
     <div className={`rounded-lg border p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
       <h2 className={`text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Two-Factor Authentication (2FA)</h2>
-      
+
       <div className="space-y-4">
         <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -2074,7 +2071,7 @@ function SecurityTab({ isDarkMode }) {
             {message}
           </div>
         )}
-        
+
         {/* API Tokens management */}
         <div className="mt-6">
           <h2 className={`text-lg font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>API Access Tokens</h2>
@@ -2083,7 +2080,7 @@ function SecurityTab({ isDarkMode }) {
           {createdTokenRaw && (
             <div className={`p-3 mb-3 rounded ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-yellow-50 text-gray-900'}`}>
               <div className="font-medium mb-2">New token (store this now)</div>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <input readOnly value={createdTokenRaw} className={isDarkMode ? 'flex-1 px-2 py-1 rounded border border-gray-700 bg-gray-900 text-gray-100' : 'flex-1 px-2 py-1 rounded border border-gray-300 bg-white text-gray-800'} />
                 <button
                   onClick={async () => {
@@ -2112,7 +2109,7 @@ function SecurityTab({ isDarkMode }) {
             <div className="mb-2 font-medium">Token label</div>
             <input value={newTokenLabel} onChange={(e) => setNewTokenLabel(e.target.value)} placeholder="Optional label" className={`w-full px-3 py-2 rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`} />
 
-            
+
 
             <div className="mt-3 flex gap-2">
               <button onClick={handleCreateToken} className="px-3 py-1 bg-green-600 text-white rounded">Generate</button>
@@ -2516,10 +2513,10 @@ function ConfigApp() {
     }
     const subTabs = [];
     const seenSubsections = new Set();
-    
+
     section.items.forEach(item => {
       let subsectionName = null;
-      
+
       // Check for string subsections
       if (item.subsection && typeof item.subsection === 'string') {
         subsectionName = formatDisplayLabel(item.subsection);
@@ -2528,7 +2525,7 @@ function ConfigApp() {
       else if (item.subsection === true) {
         subsectionName = formatDisplayLabel(item.key);
       }
-      
+
       if (subsectionName && !seenSubsections.has(subsectionName)) {
         seenSubsections.add(subsectionName);
         subTabs.push({
@@ -2537,7 +2534,7 @@ function ConfigApp() {
         });
       }
     });
-    
+
     return subTabs;
   };
 
@@ -2612,7 +2609,7 @@ function ConfigApp() {
         console.warn('Failed to load torrent clients:', error);
         setTorrentClients([]);
       }
-      
+
       // Only set default tabs if we don't have any sections loaded yet
       const currentlyHaveSections = (currentSectionsRef && currentSectionsRef.current && currentSectionsRef.current.length) ? currentSectionsRef.current.length : (sections ? sections.length : 0);
       if (currentlyHaveSections === 0 && newSections.length > 0) {
@@ -2628,7 +2625,7 @@ function ConfigApp() {
         }
       } else if (newSections.length > 0) {
         // Validate that current active tab still exists
-        const currentTabExists = newSections.some(section => 
+        const currentTabExists = newSections.some(section =>
           section.section.toLowerCase() === activeTab
         );
         if (!currentTabExists) {
@@ -2643,7 +2640,7 @@ function ConfigApp() {
           }
         } else {
           // Validate that current sub-tab still exists for the active tab
-          const activeSection = newSections.find(section => 
+          const activeSection = newSections.find(section =>
             section.section.toLowerCase() === activeTab
           );
           if (activeSection) {
@@ -2719,7 +2716,8 @@ function ConfigApp() {
         const respCreate = await apiFetch(`${API_BASE}/config_update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: createPath, value: '{}'
+          body: JSON.stringify({
+            path: createPath, value: '{}'
           })
         });
         const dataCreate = await respCreate.json();
@@ -2907,7 +2905,7 @@ function ConfigApp() {
               )}
             </div>
           )}
-          
+
           {sections.length > 0 && (
             <div className="space-y-6">
               {/* Config load warning banner */}
@@ -2924,29 +2922,27 @@ function ConfigApp() {
               <div className={`flex space-x-1 rounded-lg p-1 overflow-x-auto ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
                 <button
                   onClick={() => setActiveTab('security')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                    activeTab === 'security'
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${activeTab === 'security'
                       ? isDarkMode
                         ? 'bg-gray-700 text-white'
                         : 'bg-white text-gray-900 shadow-sm'
                       : isDarkMode
                         ? 'text-gray-400 hover:text-white hover:bg-gray-700'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   Security
                 </button>
                 <button
                   onClick={() => setActiveTab('access-log')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                    activeTab === 'access-log'
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${activeTab === 'access-log'
                       ? isDarkMode
                         ? 'bg-gray-700 text-white'
                         : 'bg-white text-gray-900 shadow-sm'
                       : isDarkMode
                         ? 'text-gray-400 hover:text-white hover:bg-gray-700'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   Access Log
                 </button>
@@ -2963,15 +2959,14 @@ function ConfigApp() {
                           setActiveSubTab(subTabs[0].id);
                         }
                       }}
-                      className={`md:flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                        isActive
+                      className={`md:flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive
                           ? isDarkMode
                             ? 'bg-gray-700 text-white'
                             : 'bg-white text-gray-900 shadow-sm'
                           : isDarkMode
                             ? 'text-gray-400 hover:text-white hover:bg-gray-700'
                             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                      }`}
+                        }`}
                     >
                       {section.section}
                     </button>
@@ -2986,10 +2981,10 @@ function ConfigApp() {
                 {sections.map((section) => {
                   const sectionId = section.section.toLowerCase();
                   if (activeTab !== sectionId) return null;
-                  
+
                   const subTabs = getSubTabsForSection(section);
                   const hasSubTabs = subTabs.length > 0;
-                  
+
                   return (
                     <div key={sectionId} className="space-y-4">
                       {/* Sub-tab Navigation */}
@@ -3001,15 +2996,14 @@ function ConfigApp() {
                               <button
                                 key={subTab.id}
                                 onClick={() => setActiveSubTab(subTab.id)}
-                                className={`md:flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                                  isActive
+                                className={`md:flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive
                                     ? isDarkMode
                                       ? 'bg-gray-600 text-white'
                                       : 'bg-white text-gray-900 shadow-sm'
                                     : isDarkMode
                                       ? 'text-gray-400 hover:text-white hover:bg-gray-600'
                                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-300'
-                                }`}
+                                  }`}
                               >
                                 {subTab.label}
                               </button>
@@ -3017,7 +3011,7 @@ function ConfigApp() {
                           })}
                         </div>
                       )}
-                      
+
                       {/* Content */}
                       <ItemList
                         items={hasSubTabs ? section.items.filter((item) => {
