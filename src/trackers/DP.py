@@ -31,7 +31,7 @@ class DP(UNIT3D):
             'Subsplease', 'SyncUp', 'TAoE', 'TGALAXY', 'TGx', 'TORRENTGALAXY', 'ToVaR', 'Trix', 'TSP', 'TSPxL',
             'ViSION', 'VXT', 'WAF', 'WKS', 'X0r', 'YIFY', 'YTS',
             ['EVO', 'WEB-DLs are allowed'],
-            ['HDT', 'Remuxes or similar automated remuxes are not allowed'],
+            ['HDT', 'Remuxes or similar automated remuxes are allowed'],
         ]
         pass
 
