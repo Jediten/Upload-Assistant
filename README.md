@@ -58,17 +58,18 @@ Many thanks to all who have contributed.
 |CapybaraBR|CBR|CinemaZ|CZ|
 |Cinematik|TIK|DarkPeers|DP|
 |DigitalCore|DC|DesiTorrents|DT|
-|Emuwarez|EMUW|
-|FearNoPeer|FNP|FileList|FL|
+|Emuwarez|EMUW|FileList|FL|
 |Friki|FRIKI|FunFile|FF|
 |GreatPosterWall|GPW|hawke-uno|HUNO|
 |HDBits|HDB|HD-Space|HDS|
 |HD-Torrents|HDT|HomieHelpDesk|HHD|
 |ImmortalSeed|IS|InfinityHD|IHD|
-|ItaTorrents|ITT|LastDigitalUnderground|LDU|
-|Lat-Team|LT|Locadora|LCD|
-|LST|LST|Luminarr|LUME|
+|ItaTorrents|ITT|KoKoCon|KKC|
+|LastDigitalUnderground|LDU|Lat-Team|LT|
+|Locadora|LCD|LST|LST|
+|Luminarr|LUME|MidnightScene|MNS|
 |MoreThanTV|MTV|Nebulance|NBL|
+|NetHD|NETHD|NordicQuality|NQ|
 |OldToonsWorld|OTW|OnlyEncodes+|OE|
 |PassThePopcorn|PTP|PolishTorrent|PTT|
 |Portugas|PT|PrivateHD|PHD|
@@ -82,8 +83,9 @@ Many thanks to all who have contributed.
 |ToTheGlory|TTG|TorrentHR|THR|
 |Torrenteros|TTR|TorrentLeech|TL|
 |TVChaosUK|TVC|ULCX|ULCX|
-|UTOPIA|UTP|YOiNKED|YOINK|
-|VietMediaF|VMF|YUSCENE|YUS|
+|UTOPIA|UTP|VietMediaF|VMF|
+|YOiNKED|YOINK|YUSCENE|YUS|
+|Zenith|ZNTH|||
 
 ## **Setup:**
    - **REQUIRES AT LEAST PYTHON 3.9 AND PIP3**
