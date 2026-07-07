@@ -229,7 +229,6 @@ const trackerNameMap = {
   'DP': 'DarkPeers',
   'DC': 'DigitalCore',
   'EMUW': 'Emuwarez',
-  'FNP': 'FearNoPeer',
   'FL': 'FileList',
   'FRIKI': 'Friki',
   'FF': 'FunFile',
