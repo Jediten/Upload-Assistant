@@ -488,7 +488,7 @@ class COMMON:
             console.print(f"Filename: {filename}")  # Ensure filename is printed if available
 
         if not meta['unattended']:
-            selection = input(f"Do you want to use these IDs from {tracker_name}? (Y/n): ").strip().lower()
+            selection = console.input(f"Do you want to use these IDs from {tracker_name}? (Y/n): ").strip().lower()
             try:
                 return bool(selection == '' or selection == 'y' or selection == 'yes')
             except (KeyboardInterrupt, EOFError):
@@ -497,7 +497,7 @@ class COMMON:
             return True
 
     async def prompt_user_for_confirmation(self, message: str) -> bool:
-        response = input(f"{message} (Y/n): ").strip().lower()
+        response = console.input(f"{message} (Y/n): ").strip().lower()
         return bool(response == '' or response == 'y')
 
     async def unit3d_region_distributor(self, meta: dict[str, Any], tracker: str, torrent_url: str, id: str = "") -> None:
