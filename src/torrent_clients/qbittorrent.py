@@ -1834,8 +1834,10 @@ async def match_tracker_url(tracker_urls: list[str], meta: dict[str, Any]) -> No
         'lst': ["https://lst.gg"],
         'lt': ["https://lat-team.com"],
         'lume': ["https://luminarr.me"],
+        'mns': ["midnightscene.cc"],
         'mtv': ["tracker.morethantv"],
         'nbl': ["tracker.nebulance"],
+        'nq': ["nordicq.org", "nordicq.info", "nordicq.cc"],
         'oe': ["https://onlyencodes.cc"],
         'otw': ["https://oldtoons.world"],
         'phd': ["tracker.privatehd"],
@@ -1856,6 +1858,7 @@ async def match_tracker_url(tracker_urls: list[str], meta: dict[str, Any]) -> No
         'ttr': ["https://torrenteros.org"],
         'tvc': ["https://tvchaosuk.com"],
         'ulcx': ["https://upload.cx"],
+        'vmf': ["tracker.vietmediaf.store"],
         'yoink': ["yoinked.org"],
         'yus': ["https://yu-scene.net"],
     }
