@@ -1803,6 +1803,7 @@ class QbittorrentClientMixin:
 
 async def match_tracker_url(tracker_urls: list[str], meta: dict[str, Any]) -> None:
     tracker_url_patterns = {
+        'a4k': ["aura4k.net"],
         'acm': ["https://eiga.moi"],
         'aither': ["https://aither.cc"],
         'ant': ["tracker.anthelion.me"],
@@ -1861,6 +1862,7 @@ async def match_tracker_url(tracker_urls: list[str], meta: dict[str, Any]) -> No
         'vmf': ["tracker.vietmediaf.store"],
         'yoink': ["yoinked.org"],
         'yus': ["https://yu-scene.net"],
+        'znth': ["znth.cx"],
     }
     found_ids: set[str] = set()
     for tracker in tracker_urls:
