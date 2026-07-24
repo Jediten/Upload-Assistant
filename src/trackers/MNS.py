@@ -1,7 +1,8 @@
 # Upload Assistant — MidnightScene (UNIT3D based)
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from src.get_desc import DescriptionBuilder
+from src.languages import languages_manager
 from src.trackers.COMMON import COMMON
 from src.trackers.UNIT3D import UNIT3D
 
@@ -21,6 +22,24 @@ class MNS(UNIT3D):
         self.search_url = f'{self.base_url}/api/torrents/filter'
         self.torrent_url = f'{self.base_url}/torrents/'
         self.banned_groups = [""]
+
+    async def get_name(self, meta: Meta) -> dict[str, str]:
+        mns_name = str(meta.get('name', ''))
+        resolution = str(meta.get('resolution', ''))
+
+        # Ensure audio language detection has run.
+        if not meta.get('audio_languages'):
+            await languages_manager.process_desc_language(meta, tracker=self.tracker)
+
+        # Prepend the spoken language (before the resolution) for non-English
+        # releases, mirroring OE. Skipped for full BDMV discs.
+        audio_languages_value = meta.get('audio_languages', [])
+        audio_languages = cast(list[str], audio_languages_value) if isinstance(audio_languages_value, list) else []
+        if audio_languages and not await languages_manager.has_english_language(audio_languages) and meta.get('is_disc') != "BDMV":
+            foreign_lang = str(audio_languages[0]).upper()
+            mns_name = mns_name.replace(f"{resolution}", f"{foreign_lang} {resolution}", 1)
+
+        return {'name': mns_name}
 
     async def get_description(self, meta: Meta) -> dict[str, str]:
         signature = f"[right][url=https://github.com/bioidaika/Upload-Assistant][size=4]{meta['ua_signature']}[/size][/url][/right]"
