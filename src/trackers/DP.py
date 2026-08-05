@@ -1,7 +1,8 @@
 # Upload Assistant © 2025 Audionut & wastaken7 — Licensed under UAPL v1.0
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 import cli_ui
+import pycountry
 
 from src.console import console
 from src.get_desc import DescriptionBuilder
@@ -11,6 +12,9 @@ from src.trackers.UNIT3D import UNIT3D
 
 
 class DP(UNIT3D):
+    # Nordic languages as DP's DUB matrix uses them (English is handled separately).
+    NORDIC_CODES = frozenset({'da', 'sv', 'no', 'is', 'fi'})
+
     def __init__(self, config: dict[str, Any]):
         super().__init__(config, tracker_name='DP')
         self.config = config
@@ -95,25 +99,154 @@ class DP(UNIT3D):
 
         return data
 
-    async def get_audio(self, meta: dict[str, Any]) -> str:
-        languages_result = "SKIPPED"
+    @staticmethod
+    def _language_code(value: str) -> str:
+        """Normalize a language name or code ('Japanese', 'ja', 'en-US') to alpha-2."""
+        lang = str(value or '').strip().lower()
+        if not lang:
+            return ''
+        # languages_manager uses langcodes display names, which carry a region
+        # in parentheses ('Portuguese (Brazil)'); DP tags the language only.
+        if '(' in lang:
+            lang = lang.split('(')[0].strip()
+        if '-' in lang:
+            lang = lang.split('-')[0].strip()
+        if len(lang) != 2:
+            try:
+                lang_obj = pycountry.languages.lookup(lang)
+            except (AttributeError, KeyError, LookupError):
+                lang_obj = pycountry.languages.get(name=lang.title()) or pycountry.languages.get(alpha_3=lang)
+            # Languages with no alpha-2 (e.g. Filipino) keep their name and
+            # simply match nothing, which leaves the core tag untouched.
+            if lang_obj is not None and getattr(lang_obj, 'alpha_2', None):
+                lang = str(lang_obj.alpha_2).lower()
+        # Collapse variant spellings onto a single code.
+        if lang in ('nb', 'nn'):
+            return 'no'
+        if lang in ('cmn', 'cn'):
+            return 'zh'
+        return lang
+
+    @classmethod
+    def _language_name(cls, code: str, detected: str) -> str:
+        """Display name to use in the tag.
+
+        Regional specification is kept for non-Nordic languages, so a Brazilian
+        Portuguese track tags as 'Portuguese (Brazil) MULTi'. Nordic variants
+        are the exception and collapse to the canonical language, so both
+        'Norwegian Bokmal' and 'Swedish (Finland)' tag as plain 'Norwegian' /
+        'Swedish'.
+        """
+        if code not in cls.NORDIC_CODES:
+            return detected
+        try:
+            lang_obj = pycountry.languages.get(alpha_2=code)
+            if lang_obj is not None and getattr(lang_obj, 'name', None):
+                return str(lang_obj.name)
+        except (AttributeError, KeyError, LookupError):
+            pass
+        return detected.split('(')[0].strip() or detected
+
+    async def get_audio(self, meta: dict[str, Any]) -> Optional[str]:
+        """Return DP's DUB element, per the site's decision matrix.
+
+        Returns the tag to use, '' where the matrix calls for no tag, or None
+        when the combination isn't covered by the matrix -- in which case the
+        core's own tag is left alone rather than guessed at.
+        """
+        # 'Any / Disc release / (No tag)' -- DP only tags non-discs. Checked
+        # here because --dual-audio forces a tag past audio.py's is_disc guard.
+        if meta.get('is_disc'):
+            return ''
 
         if not meta.get('language_checked', False):
             await languages_manager.process_desc_language(meta, tracker=self.tracker)
 
         audio_languages = meta.get('audio_languages')
-        if isinstance(audio_languages, list):
-            audio_languages_list = cast(list[Any], audio_languages)
-            normalized_languages = {str(lang).strip() for lang in audio_languages_list if str(lang).strip()}
+        if not isinstance(audio_languages, list):
+            return None
+        audio_languages_list = cast(list[Any], audio_languages)
 
-            if len(normalized_languages) > 2:
-                languages_result = "MULTi"
-            elif len(normalized_languages) > 1:
-                languages_result = "Dual-Audio"
+        # De-duplicate by code; see _language_name for how the tag text keeps
+        # regional specification everywhere except Nordic variants.
+        names_by_code: dict[str, str] = {}
+        for entry in audio_languages_list:
+            name = str(entry).strip()
+            code = self._language_code(name)
+            if code:
+                names_by_code.setdefault(code, self._language_name(code, name))
+
+        original = self._language_code(str(meta.get('original_language', '') or ''))
+        if not names_by_code or not original:
+            # Every row keys on the original language; without it, don't guess.
+            return None
+
+        codes = set(names_by_code)
+        has_english = 'en' in codes
+        has_original = original in codes
+        has_nordic = bool(codes & self.NORDIC_CODES)
+
+        # 'Any / Original language only / (No tag)'
+        if codes == {original}:
+            return ''
+
+        if original != 'en':
+            if codes == {'en'}:
+                return 'Dubbed'
+            # Nordic dub of non-English, non-Nordic content -> 'Swedish Dubbed'.
+            if len(codes) == 1 and codes <= self.NORDIC_CODES and original not in self.NORDIC_CODES:
+                return f'{names_by_code[next(iter(codes))]} Dubbed'
+            if has_original and has_english:
+                # Original + English is Dual-Audio; anything further is MULTi.
+                return 'Dual-Audio' if len(codes) == 2 else 'MULTi'
+            if has_original and len(codes - {original}) >= 2:
+                return 'MULTi'
+            # 'Original or English or Nordic + 1 other' -- name the language that
+            # isn't acting as the base.
+            others = codes - {original, 'en'}
+            if has_original or has_english:
+                candidates = sorted(others)
+            elif has_nordic:
+                # No original/English track, so a Nordic one is the base; name
+                # whatever accompanies it.
+                candidates = sorted(others - self.NORDIC_CODES)
             else:
-                languages_result = str(next(iter(normalized_languages), "SKIPPED"))
+                candidates = []
+            if len(candidates) == 1 and len(codes) >= 2:
+                return f'{names_by_code[candidates[0]]} MULTi'
+            return None
 
-        return f'{languages_result}'
+        # English-original content: everything besides English is an 'other'.
+        if has_english:
+            extras = sorted(codes - {'en'})
+            if len(extras) == 1:
+                return f'{names_by_code[extras[0]]} MULTi'
+            if len(extras) >= 2:
+                return 'MULTi'
+        return None
+
+    @staticmethod
+    def _apply_dub_tag(name: str, meta: dict[str, Any], tag: str) -> str:
+        """Swap the core's DUB tag for DP's, inserting or removing as needed.
+
+        audio.py builds meta['audio'] with the dub tag as its leading token
+        (audio.py L499), so rewriting that substring covers all three cases.
+        """
+        core_audio = ' '.join(str(meta.get('audio', '')).split())
+        if core_audio and core_audio in name:
+            bare_audio = core_audio
+            for existing in ('Dual-Audio', 'Dubbed'):
+                if bare_audio.startswith(f'{existing} '):
+                    bare_audio = bare_audio[len(existing) + 1:]
+                    break
+            replacement = f'{tag} {bare_audio}' if tag else bare_audio
+            return ' '.join(name.replace(core_audio, replacement, 1).split())
+
+        # Fallback if meta['audio'] can't be located: rewrite the tag in place.
+        for existing in ('Dual-Audio', 'Dubbed'):
+            if existing in name:
+                return ' '.join(name.replace(existing, tag, 1).split())
+        return name
 
     async def get_name(self, meta: dict[str, Any]) -> dict[str, str]:
         dp_name = str(meta.get('name', ''))
@@ -157,8 +290,8 @@ class DP(UNIT3D):
             dp_name = ' '.join(f"{lead} {marker}{tail}".split())
         # ------------------------------------------------------------------
 
-        audio = await self.get_audio(meta)
-        if audio and audio != "SKIPPED" and "Dual-Audio" in dp_name:
-            dp_name = dp_name.replace("Dual-Audio", audio)
+        dub_tag = await self.get_audio(meta)
+        if dub_tag is not None:
+            dp_name = self._apply_dub_tag(dp_name, meta, dub_tag)
 
         return {'name': dp_name}
