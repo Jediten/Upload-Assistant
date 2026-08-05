@@ -148,12 +148,25 @@ class DP(UNIT3D):
         return detected.split('(')[0].strip() or detected
 
     async def get_audio(self, meta: dict[str, Any]) -> Optional[str]:
-        """Return DP's DUB element, per the site's decision matrix.
+        """Return DP's DUB element, honouring the core's suppression flags.
 
-        Returns the tag to use, '' where the matrix calls for no tag, or None
-        when the combination isn't covered by the matrix -- in which case the
-        core's own tag is left alone rather than guessed at.
+        Returns the tag to use, '' where no tag belongs, or None when the
+        matrix doesn't cover the combination -- in which case the core's own
+        tag is left alone rather than guessed at.
         """
+        tag = await self._dub_tag(meta)
+        if tag:
+            # --no-dub / --no-dual suppress DP's tag just as they do the core's.
+            # MULTi counts as dual: it is what the core's Dual-Audio becomes
+            # here, so without this --no-dual would be a no-op on DP.
+            if meta.get('no_dub', False) and tag.endswith('Dubbed'):
+                return ''
+            if meta.get('no_dual', False) and (tag == 'Dual-Audio' or tag.endswith('MULTi')):
+                return ''
+        return tag
+
+    async def _dub_tag(self, meta: dict[str, Any]) -> Optional[str]:
+        """The DUB element DP's decision matrix calls for, flags aside."""
         # 'Any / Disc release / (No tag)' -- DP only tags non-discs. Checked
         # here because --dual-audio forces a tag past audio.py's is_disc guard.
         if meta.get('is_disc'):
