@@ -6,7 +6,7 @@ import cli_ui
 from src.console import console
 from src.get_desc import DescriptionBuilder
 from src.languages import languages_manager
-from src.tmdb import TmdbManager
+from src.tmdb import TmdbManager, get_tmdb_localized_data
 from src.trackers.UNIT3D import UNIT3D
 
 
@@ -117,6 +117,45 @@ class DP(UNIT3D):
 
     async def get_name(self, meta: dict[str, Any]) -> dict[str, str]:
         dp_name = str(meta.get('name', ''))
+
+        # --- DP title/order fix (DP-local, not global) --------------------
+        # 1) Title: canonical TMDB (en-US) name. The core overwrites
+        #    meta['title'] with the TVDB series name for non-English-origin TV
+        #    (see prep.py); DP requires the TMDB title.
+        # 2) AKA: source from IMDb's aka field (imdb_info['aka']), NOT the IMDb
+        #    title and NOT meta['aka'] (which can be TMDB-derived). Note
+        #    imdb_info['aka'] itself falls back to the IMDb title when IMDb has
+        #    no distinct alternate title (imdb.py L309) -- that fallback is the
+        #    situation for releases like this one.
+        # 3) Order: DP wants title, AKA, year. Rebuild only the pre-episode
+        #    head; leave the season/episode marker and everything after it
+        #    exactly as the core built it.
+        try:
+            tmdb_main = await get_tmdb_localized_data(
+                meta, data_type='main', language='en-US', append_to_response=''
+            )
+            tmdb_title = str((tmdb_main or {}).get('name') or (tmdb_main or {}).get('title') or '').strip()
+        except Exception:
+            tmdb_title = ''
+        if not tmdb_title:
+            tmdb_title = str(meta.get('title', '')).strip()
+
+        season = str(meta.get('season', '') or '').strip()
+        episode = str(meta.get('episode', '') or '').strip()
+        marker = f"{season}{episode}".strip()
+
+        if meta.get('category') == 'TV' and marker and marker in dp_name:
+            year = str(meta.get('year', '') or '').strip()
+            aka = ''
+            if not meta.get('no_aka', False):
+                imdb_aka = str((meta.get('imdb_info') or {}).get('aka', '') or '').strip()
+                if imdb_aka and imdb_aka.lower() != tmdb_title.lower() \
+                        and imdb_aka.lower() not in tmdb_title.lower():
+                    aka = f"AKA {imdb_aka}"
+            tail = dp_name.partition(marker)[2]
+            lead = ' '.join(p for p in (tmdb_title, aka, year) if p)
+            dp_name = ' '.join(f"{lead} {marker}{tail}".split())
+        # ------------------------------------------------------------------
 
         audio = await self.get_audio(meta)
         if audio and audio != "SKIPPED" and "Dual-Audio" in dp_name:
