@@ -112,6 +112,7 @@ class Args:
         parser.add_argument('-daily', '--daily', nargs=1, required=False, help="Air date of this episode (YYYY-MM-DD)", type=datetime.date.fromisoformat, dest="manual_date")
         parser.add_argument('--no-season', dest='no_season', action='store_true', required=False, help="Remove Season from title")
         parser.add_argument('--no-year', dest='no_year', action='store_true', required=False, help="Remove Year from title")
+        parser.add_argument('-fy', '--force-year', dest='force_year', action='store_true', required=False, help="Force Year into a TV title when the series name was not auto-qualified with one. Overridden by --no-year")
         parser.add_argument('--no-aka', dest='no_aka', action='store_true', required=False, help="Remove AKA from title")
         parser.add_argument('--no-dub', dest='no_dub', action='store_true', required=False, help="Remove Dubbed from title")
         parser.add_argument('--no-dual', dest='no_dual', action='store_true', required=False, help="Remove Dual-Audio from title")

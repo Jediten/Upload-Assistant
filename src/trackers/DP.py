@@ -291,7 +291,14 @@ class DP(UNIT3D):
         marker = f"{season}{episode}".strip()
 
         if meta.get('category') == 'TV' and marker and marker in dp_name:
-            year = str(meta.get('year', '') or '').strip()
+            # Year is a disambiguator, not a fixture: carry it only when TVDB
+            # qualified the series name with one (prep.py L1084-1091 harvests it
+            # into search_year), which is what the core gates on at
+            # get_name.py L101. Honour --no-year like the core does at L108.
+            year = ''
+            forced = bool(meta.get('force_year', False))
+            if not meta.get('no_year', False) and (forced or str(meta.get('search_year', '') or '').strip()):
+                year = str(meta.get('year', '') or '').strip()
             aka = ''
             if not meta.get('no_aka', False):
                 imdb_aka = str((meta.get('imdb_info') or {}).get('aka', '') or '').strip()
