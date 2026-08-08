@@ -255,6 +255,7 @@ const trackerNameMap = {
   'OTW': 'OldToonsWorld',
   'OE': 'OnlyEncodes+',
   'PTP': 'PassThePopcorn',
+  'PG': 'PeerGarden',
   'PTT': 'PolishTorrent',
   'PT': 'Portugas',
   'PHD': 'PrivateHD',

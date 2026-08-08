@@ -57,6 +57,7 @@ from src.trackers.NETHD import NETHD
 from src.trackers.KKC import KKC
 from src.trackers.OE import OE
 from src.trackers.OTW import OTW
+from src.trackers.PG import PG
 from src.trackers.PHD import PHD
 from src.trackers.PT import PT
 from src.trackers.PTER import PTER
@@ -1346,14 +1347,14 @@ tracker_class_map: dict[str, type[Any]] = {
     'A4K': A4K, 'ACM': ACM, 'AITHER': AITHER, 'ANT': ANT, 'AR': AR, 'ASC': ASC, 'AZ': AZ, 'BHD': BHD, 'BHDTV': BHDTV, 'BJS': BJS, 'BLU': BLU, 'BT': BT, 'CBR': CBR,
     'CZ': CZ, 'DC': DC, 'DP': DP, 'DT': DT, 'EMUW': EMUW, 'FF': FF, 'FL': FL, 'FRIKI': FRIKI, 'GPW': GPW, 'HDB': HDB, 'HDS': HDS, 'HDT': HDT, 'HHD': HHD, 'HUNO': HUNO, 'ITT': ITT,
     'NETHD': NETHD, 'KKC': KKC,
-    'IHD': IHD, 'IS': IS, 'LCD': LCD, 'LDU': LDU, 'LST': LST, 'LT': LT, 'LUME': LUME, 'MTV': MTV, 'NBL': NBL, 'OE': OE, 'OTW': OTW, 'PHD': PHD, 'PT': PT, 'PTP': PTP, 'PTER': PTER, 'PTS': PTS, 'PTT': PTT,
+    'IHD': IHD, 'IS': IS, 'LCD': LCD, 'LDU': LDU, 'LST': LST, 'LT': LT, 'LUME': LUME, 'MTV': MTV, 'NBL': NBL, 'OE': OE, 'OTW': OTW, 'PG': PG, 'PHD': PHD, 'PT': PT, 'PTP': PTP, 'PTER': PTER, 'PTS': PTS, 'PTT': PTT,
     'R4E': R4E, 'RAS': RAS, 'RF': RF, 'RTF': RTF, 'SAM': SAM, 'SHRI': SHRI, 'SN': SN, 'SP': SP, 'SPD': SPD, 'STC': STC, 'THR': THR,
     'THV': THV, 'TIK': TIK, 'TL': TL, 'TLZ': TLZ, 'TOS': TOS, 'TVC': TVC, 'TTG': TTG, 'TTR': TTR, 'ULCX': ULCX, 'UTP': UTP, 'VMF': VMF, 'MNS': MNS, 'NQ': NQ, 'YOINK': YOINK, 'YUS': YUS, 'ZNTH': ZNTH
 }
 
 api_trackers = {
     'A4K', 'ACM', 'AITHER', 'BHD', 'BLU', 'CBR', 'DP', 'DT', 'EMUW', 'FRIKI', 'HHD', 'HUNO', 'IHD', 'ITT', 'LCD', 'LDU', 'LST', 'LT', 'LUME',
-    'OE', 'OTW', 'PT', 'PTT', 'RAS', 'RF', 'R4E', 'SAM', 'SHRI', 'SP', 'STC', 'THV', 'TIK', 'TLZ', 'TOS', 'TTR', 'NQ', 'ULCX', 'UTP', 'VMF', 'MNS', 'YOINK', 'YUS', 'ZNTH'
+    'OE', 'OTW', 'PG', 'PT', 'PTT', 'RAS', 'RF', 'R4E', 'SAM', 'SHRI', 'SP', 'STC', 'THV', 'TIK', 'TLZ', 'TOS', 'TTR', 'NQ', 'ULCX', 'UTP', 'VMF', 'MNS', 'YOINK', 'YUS', 'ZNTH'
 }
 
 other_api_trackers = {
