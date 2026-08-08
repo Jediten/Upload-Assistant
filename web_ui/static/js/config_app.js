@@ -273,7 +273,7 @@ const trackerNameMap = {
   'TLZ': 'The Leach Zone',
   'TOS': 'TheOldSchool',
   'TTG': 'ToTheGlory',
-  'TAV': 'TorrentAvenue',
+  'THV': 'TorrentHaven',
   'THR': 'TorrentHR',
   'TTR': 'Torrenteros',
   'TL': 'TorrentLeech',

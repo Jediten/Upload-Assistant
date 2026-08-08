@@ -1,4 +1,4 @@
-# Upload Assistant — TorrentAvenue (UNIT3D based)
+# Upload Assistant — TorrentHaven (UNIT3D based)
 from typing import Any
 
 from src.trackers.COMMON import COMMON
@@ -8,13 +8,13 @@ Meta = dict[str, Any]
 Config = dict[str, Any]
 
 
-class TAV(UNIT3D):
+class THV(UNIT3D):
     def __init__(self, config: Config) -> None:
-        super().__init__(config, tracker_name='TAV')
+        super().__init__(config, tracker_name='THV')
         self.config = config
         self.common = COMMON(config)
-        self.tracker = 'TAV'
-        self.base_url = 'https://torrentavenue.online'
+        self.tracker = 'THV'
+        self.base_url = 'https://torrenthaven.org'
         self.id_url = f'{self.base_url}/api/torrents/'
         self.upload_url = f'{self.base_url}/api/torrents/upload'
         self.search_url = f'{self.base_url}/api/torrents/filter'
