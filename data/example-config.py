@@ -350,7 +350,7 @@ config = {
 
     "TRACKERS": {
         # Which trackers do you want to upload to?
-        # Available tracker: A4K, ACM, AITHER, ANT, AR, ASC, AZ, BHD, BHDTV, BJS, BLU, BT, CBR, CZ, DC, DP, DT, EMUW, FF, FL, FRIKI, GPW, HDB, HDS, HDT, HHD, HUNO, IHD, IS, ITT, KKC, LCD, LDU, LST, LT, LUME, MNS, MTV, NBL, NETHD, NQ, OE, OTW, PG, PHD, PT, PTER, PTP, PTS, PTT, R4E, RAS, RF, RTF, SAM, SHRI, SN, SP, SPD, STC, THR, THV, TIK, TL, TLZ, TOS, TTG, TTR, TVC, ULCX, UTP, VMF, YOINK, YUS, ZNTH
+        # Available tracker: A4K, ACM, AITHER, ANT, AR, ASC, AZ, BHD, BHDTV, BJS, BLU, BT, CBR, CZ, DC, DIGI, DP, DT, EMUW, FF, FL, FRIKI, GPW, HDB, HDS, HDT, HHD, HUNO, IHD, IS, ITT, KKC, LCD, LDU, LST, LT, LUME, MNS, MTV, NBL, NETHD, NQ, OE, OTW, PG, PHD, PT, PTER, PTP, PTS, PTT, R4E, RAS, RF, RTF, SAM, SHRI, SN, SP, SPD, STC, THR, THV, TIK, TL, TLZ, TOS, TTG, TTR, TVC, ULCX, UTP, VMF, YOINK, YUS, ZNTH
         # Only add the trackers you want to upload to on a regular basis
         "default_trackers": "",
 
@@ -497,6 +497,15 @@ config = {
             "anon": False,
             # If True, the script will use the metadata-based title instead of the folder/file name.
             "use_metadata_name": False,
+        },
+        "DIGI": {
+            # Diginette - UNIT3D-based tracker
+            # Instead of using the tracker acronym for folder name when sym/hard linking, you can use a custom name
+            "link_dir_name": "",
+            # Set to True if using this tracker for automatic ID searching or description parsing
+            "useAPI": False,
+            "api_key": "",
+            "anon": False,
         },
         "DP": {
             # Instead of using the tracker acronym for folder name when sym/hard linking, you can use a custom name

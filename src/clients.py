@@ -34,7 +34,7 @@ class Clients(QbittorrentClientMixin, RtorrentClientMixin, DelugeClientMixin, Tr
             return host == domain or host.endswith(f".{domain}")
 
         def _last_path_id(path: str) -> Optional[str]:
-            match = re.search(r"/(\d+)$", path)
+            match = re.search(r"/(\d+)/?$", path)
             return match.group(1) if match else None
 
         def _query_id(query: str, key: str) -> Optional[str]:
@@ -60,6 +60,10 @@ class Clients(QbittorrentClientMixin, RtorrentClientMixin, DelugeClientMixin, Tr
                 tracker_id = _last_path_id(path)
                 if tracker_id:
                     tracker_ids["lst"] = tracker_id
+            elif _is_host(host, "diginette.org"):
+                tracker_id = _last_path_id(path)
+                if tracker_id:
+                    tracker_ids["digi"] = tracker_id
             elif _is_host(host, "onlyencodes.cc"):
                 tracker_id = _last_path_id(path)
                 if tracker_id:

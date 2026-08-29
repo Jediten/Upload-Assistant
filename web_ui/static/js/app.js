@@ -145,6 +145,7 @@ const argumentCategories = [
       { label: "--blu", placeholder: "ID_OR_URL", description: "BLU id/link" },
       { label: "--aither", placeholder: "ID_OR_URL", description: "Aither id/link" },
       { label: "--lst", placeholder: "ID_OR_URL", description: "LST id/link" },
+      { label: "--digi", placeholder: "ID_OR_URL", description: "Diginette id/link" },
       { label: "--oe", placeholder: "ID_OR_URL", description: "OE id/link" },
       { label: "--hdb", placeholder: "ID_OR_URL", description: "HDB id/link" },
       { label: "--btn", placeholder: "ID_OR_URL", description: "BTN id/link" },

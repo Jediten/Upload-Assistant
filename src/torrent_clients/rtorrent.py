@@ -458,7 +458,7 @@ class RtorrentClientMixin:
             meta.update(tracker_ids)
 
             # If we found a tracker ID, log it
-            for tracker in ['ptp', 'bhd', 'btn', 'blu', 'aither', 'lst', 'oe', 'hdb']:
+            for tracker in ['ptp', 'bhd', 'btn', 'blu', 'aither', 'lst', 'digi', 'oe', 'hdb']:
                 if meta.get(tracker):
                     console.print(f"[bold cyan]meta updated with {tracker.upper()} ID: {meta[tracker]}")
 

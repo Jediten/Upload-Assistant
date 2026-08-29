@@ -115,6 +115,7 @@ class TrackerDataManager:
                     'aither': 'AITHER',
                     'blu': 'BLU',
                     'lst': 'LST',
+                    'digi': 'DIGI',
                     'ulcx': 'ULCX',
                     'oe': 'OE',
                     'huno': 'HUNO',
@@ -142,6 +143,7 @@ class TrackerDataManager:
                     'ulcx': 'ULCX',
                     'huno': 'HUNO',
                     'lst': 'LST',
+                    'digi': 'DIGI',
                     'ant': 'ANT',
                     'hdb': 'HDB',
                     'bhd': 'BHD',
@@ -373,7 +375,7 @@ class TrackerDataManager:
 
             else:
                 # Process all trackers with API = true if no specific tracker is set in meta
-                tracker_order = ["PTP", "HDB", "BHD", "BLU", "AITHER", "HUNO", "LST", "OE", "ULCX"]
+                tracker_order = ["PTP", "HDB", "BHD", "BLU", "AITHER", "HUNO", "LST", "DIGI", "OE", "ULCX"]
 
                 if cat == "TV" or meta.get('category') == "TV":
                     if meta['debug']:
@@ -433,7 +435,7 @@ class TrackerDataManager:
         common = COMMON(self.config)
 
         # Prioritize trackers in this order
-        tracker_order = ["BLU", "AITHER", "ULCX", "LST", "OE"]
+        tracker_order = ["BLU", "AITHER", "ULCX", "LST", "DIGI", "OE"]
 
         # Check if we have stored torrent comments
         if meta.get('torrent_comments'):
@@ -457,6 +459,7 @@ class TrackerDataManager:
                         "BLU": "blutopia.cc",
                         "AITHER": "aither.cc",
                         "LST": "lst.gg",
+                        "DIGI": "diginette.org",
                         "OE": "onlyencodes.cc",
                         "ULCX": "upload.cx",
                     }
@@ -499,5 +502,4 @@ class TrackerDataManager:
 
                     if meta.get('distributor') and not had_distributor and meta.get('debug', False):
                         console.print(f"[green]Found distributor '{meta['distributor']}' from {tracker_name}[/green]")
-
 

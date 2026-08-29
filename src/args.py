@@ -131,6 +131,7 @@ class Args:
         parser.add_argument('-blu', '--blu', nargs=1, required=False, help="BLU torrent id/link", type=str)
         parser.add_argument('-aither', '--aither', nargs=1, required=False, help="Aither torrent id/link", type=str)
         parser.add_argument('-lst', '--lst', nargs=1, required=False, help="LST torrent id/link", type=str)
+        parser.add_argument('-digi', '--digi', nargs=1, required=False, help="Diginette torrent id/link", type=str)
         parser.add_argument('-oe', '--oe', nargs=1, required=False, help="OE torrent id/link", type=str)
         parser.add_argument('-hdb', '--hdb', nargs=1, required=False, help="HDB torrent id/link", type=str)
         parser.add_argument('-btn', '--btn', nargs=1, required=False, help="BTN torrent id/link", type=str)
@@ -296,6 +297,19 @@ class Args:
                                 console.print('[red]Continuing without --lst')
                         else:
                             meta['lst'] = value2
+                    elif key == 'digi':
+                        if value2.startswith('http'):
+                            parsed = urllib.parse.urlparse(value2)
+                            try:
+                                digipath = parsed.path
+                                if digipath.endswith('/'):
+                                    digipath = digipath[:-1]
+                                meta['digi'] = digipath.split('/')[-1]
+                            except Exception:
+                                console.print('[red]Unable to parse id from url')
+                                console.print('[red]Continuing without --digi')
+                        else:
+                            meta['digi'] = value2
                     elif key == 'oe':
                         if value2.startswith('http'):
                             parsed = urllib.parse.urlparse(value2)

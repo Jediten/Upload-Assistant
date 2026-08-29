@@ -31,7 +31,7 @@ Many thanks to all who have contributed.
   - Generates and Parses MediaInfo/BDInfo.
   - Generates and Uploads screenshots. HDR tonemapping if config.
   - Uses srrdb to fix scene names used at sites.
-  - Can grab descriptions from PTP/BLU/Aither/LST/OE/BHD (with config option automatically on filename match, or using arg).
+  - Can grab descriptions from PTP/HDB/BHD/BLU/Aither/Diginette/HUNO/LST/OE/ULCX (with config option automatically on filename match, or using arg).
   - Can strip and use existing screenshots from descriptions to skip screenshot generation and uploading.
   - Obtains TMDb/IMDb/MAL/TVDB/TVMAZE identifiers.
   - Converts absolute to season episode numbering for Anime. Non-Anime support with TVDB credentials
@@ -57,6 +57,7 @@ Many thanks to all who have contributed.
 |BrasilJapão-Share|BJS|BrasilTracker|BT|
 |CapybaraBR|CBR|CinemaZ|CZ|
 |Cinematik|TIK|DarkPeers|DP|
+|Diginette|DIGI|||
 |DigitalCore|DC|DesiTorrents|DT|
 |Emuwarez|EMUW|FileList|FL|
 |Friki|FRIKI|FunFile|FF|

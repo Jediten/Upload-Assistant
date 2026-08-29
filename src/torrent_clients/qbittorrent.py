@@ -159,7 +159,7 @@ class QbittorrentClientMixin:
                     meta.update(tracker_ids)
 
                     if tracker_ids:
-                        for tracker in ['ptp', 'bhd', 'btn', 'huno', 'blu', 'aither', 'ulcx', 'lst', 'oe', 'hdb']:
+                        for tracker in ['ptp', 'bhd', 'btn', 'huno', 'blu', 'aither', 'ulcx', 'lst', 'digi', 'oe', 'hdb']:
                             if meta.get(tracker):
                                 console.print(f"[bold cyan]meta updated with {tracker.upper()} ID: {meta[tracker]}")
 
@@ -1242,6 +1242,7 @@ class QbittorrentClientMixin:
                 'ptp': {"url": "passthepopcorn.me", "pattern": r'torrentid=(\d+)'},
                 'aither': {"url": "https://aither.cc", "pattern": r'/(\d+)$'},
                 'lst': {"url": "https://lst.gg", "pattern": r'/(\d+)$'},
+                'digi': {"url": "https://diginette.org", "pattern": r'/(\d+)$'},
                 'oe': {"url": "https://onlyencodes.cc", "pattern": r'/(\d+)$'},
                 'blu': {"url": "https://blutopia.cc", "pattern": r'/(\d+)$'},
                 'hdb': {"url": "https://hdbits.org", "pattern": r'id=(\d+)'},
@@ -1256,7 +1257,7 @@ class QbittorrentClientMixin:
                 'sp': {"url": "https://seedpool.org", "pattern": r'/(\d+)$'},
             }
 
-            tracker_priority = ['aither', 'ulcx', 'lst', 'blu', 'oe', 'btn', 'bhd', 'huno', 'hdb', 'rf', 'otw', 'yus', 'dp', 'sp', 'ptp']
+            tracker_priority = ['aither', 'ulcx', 'lst', 'digi', 'blu', 'oe', 'btn', 'bhd', 'huno', 'hdb', 'rf', 'otw', 'yus', 'dp', 'sp', 'ptp']
 
             if proxy_url:
                 try:
@@ -1818,6 +1819,7 @@ async def match_tracker_url(tracker_urls: list[str], meta: dict[str, Any]) -> No
         'cbr': ["capybarabr.com"],
         'cz': ["tracker.cinemaz.to"],
         'dc': ["tracker.digitalcore.club", "trackerprxy.digitalcore.club"],
+        'digi': ["https://diginette.org"],
         'dp': ["https://darkpeers.org"],
         'ff': ["tracker.funfile.org"],
         'fl': ["reactor.filelist", "reactor.thefl.org"],
