@@ -320,13 +320,7 @@ async def update_meta_with_unit3d_data(meta: Meta, tracker_data: Sequence[Any], 
         valid_images = await check_images_concurrently(imagelist_typed, meta)
         if valid_images:
             meta['image_list'] = valid_images
-            if (
-                meta.get('image_list')
-                and (
-                    not (meta.get('blu') or meta.get('aither') or meta.get('lst') or meta.get('oe') or meta.get('huno') or meta.get('ulcx'))
-                    or meta['unattended']
-                )
-            ):
+            if meta.get('image_list'):
                 await handle_image_list(meta, tracker_name, valid_images)
 
     if filename:
@@ -419,6 +413,7 @@ async def update_metadata_from_tracker(
                     valid_images = await check_images_concurrently(ptp_imagelist, meta)
                     if valid_images:
                         meta['image_list'] = valid_images
+                        await handle_image_list(meta, tracker_name, valid_images)
                         console.print("[green]PTP images added to metadata.[/green]")
             else:
                 console.print(f"[yellow]Could not find IMDb ID using PTP ID: {ptp_torrent_id}[/yellow]")
