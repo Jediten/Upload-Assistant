@@ -5,6 +5,7 @@ Validates the user's config.py against expected structure and types.
 """
 from typing import Any, Optional, cast
 
+from src.imagehosts import get_disabled_image_hosts
 from src.trackeraliases import normalize_tracker_list
 
 # Required top-level sections
@@ -27,6 +28,7 @@ DEFAULT_KEY_TYPES: dict[str, tuple[type, ...]] = {
     "img_host_1": (str,),
     "img_host_2": (str,),
     "img_host_3": (str,),
+    "disabled_image_hosts": (str, list, tuple, set),
     "imgbb_api": (str,),
     "ptpimg_api": (str,),
     "lensdump_api": (str,),
@@ -328,18 +330,21 @@ def validate_config(
     # Validate image host API keys
     default_section = _as_dict(config_dict.get("DEFAULT"))
     if default_section:
+        disabled_hosts = get_disabled_image_hosts(default_section)
         # Determine which image hosts are active
         active_hosts: list[str] = []
 
         # If imghost specified from command line, use that
         if active_imghost and active_imghost.strip():
-            active_hosts = [active_imghost.strip()]
+            normalized_active_host = active_imghost.strip()
+            if normalized_active_host.lower() not in disabled_hosts:
+                active_hosts = [normalized_active_host]
         else:
             # Collect all configured img_host_* values
             for i in range(1, 10):
                 host_key = f"img_host_{i}"
                 host_value = default_section.get(host_key, "")
-                if isinstance(host_value, str) and host_value.strip():
+                if isinstance(host_value, str) and host_value.strip() and host_value.strip().lower() not in disabled_hosts:
                     active_hosts.append(host_value.strip())
 
         # Check that each active host has its required API key
@@ -389,6 +394,7 @@ def _validate_default_section(default: dict[str, Any]) -> tuple[list[str], list[
                 ))
 
     # Validate image hosts
+    disabled_hosts = get_disabled_image_hosts(default)
     for i in range(1, 10):
         host_key = f"img_host_{i}"
         if host_key in default:
@@ -396,6 +402,12 @@ def _validate_default_section(default: dict[str, Any]) -> tuple[list[str], list[
             if isinstance(host_value, str) and host_value and host_value not in VALID_IMAGE_HOSTS:
                 warnings.append(ConfigValidationWarning(
                     f"Unknown image host '{host_value}'. Valid hosts: {', '.join(h for h in VALID_IMAGE_HOSTS if h)}",
+                    key=host_key,
+                    section="DEFAULT"
+                ))
+            elif isinstance(host_value, str) and host_value.strip().lower() in disabled_hosts:
+                warnings.append(ConfigValidationWarning(
+                    f"Image host '{host_value}' is disabled and will be skipped",
                     key=host_key,
                     section="DEFAULT"
                 ))

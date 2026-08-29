@@ -39,6 +39,7 @@ from src.dupe_checking import DupeChecker
 from src.get_desc import gen_desc
 from src.get_name import NameManager
 from src.get_tracker_data import TrackerDataManager
+from src.imagehosts import get_disabled_image_hosts
 from src.languages import languages_manager
 from src.nfo_link import NfoLinkManager
 from src.qbitwait import Wait
@@ -927,12 +928,13 @@ async def process_meta(meta: Meta, base_dir: str, bot: Any = None) -> None:
 
                             default_cfg_obj = config.get('DEFAULT', {})
                             default_cfg: dict[str, Any] = cast(dict[str, Any], default_cfg_obj) if isinstance(default_cfg_obj, dict) else {}
+                            disabled_image_hosts = get_disabled_image_hosts(default_cfg)
                             configured_hosts: list[str] = []
                             for host_index in range(1, 10):
                                 host_key = f'img_host_{host_index}'
                                 if host_key in default_cfg:
                                     host = default_cfg.get(host_key)
-                                    if host and host not in configured_hosts:
+                                    if host and str(host) not in disabled_image_hosts and host not in configured_hosts:
                                         configured_hosts.append(str(host))
 
                             if meta.get('debug'):
@@ -950,6 +952,7 @@ async def process_meta(meta: Meta, base_dir: str, bot: Any = None) -> None:
                                     approved_hosts_list = [
                                         str(host)
                                         for host in cast(Iterable[Any], approved_hosts)
+                                        if str(host) not in disabled_image_hosts
                                     ]
                                     approved_sets.append(set(approved_hosts_list))
                                 else:
@@ -1017,12 +1020,13 @@ async def process_meta(meta: Meta, base_dir: str, bot: Any = None) -> None:
                     try:
                         default_cfg_obj = config.get('DEFAULT', {})
                         default_cfg = cast(dict[str, Any], default_cfg_obj) if isinstance(default_cfg_obj, dict) else {}
+                        disabled_image_hosts = get_disabled_image_hosts(default_cfg)
                         min_successful_uploads = int(default_cfg.get('min_successful_image_uploads', 3))
                         host_order: list[str] = []
                         for host_index in range(1, 10):
                             host_key = f'img_host_{host_index}'
                             host = default_cfg.get(host_key)
-                            if host and host not in host_order:
+                            if host and str(host) not in disabled_image_hosts and host not in host_order:
                                 host_str = str(host)
                                 if allowed_hosts is None or host_str in allowed_hosts:
                                     host_order.append(host_str)
@@ -1030,6 +1034,7 @@ async def process_meta(meta: Meta, base_dir: str, bot: Any = None) -> None:
                         current_img_host = str(meta.get('imghost') or default_cfg.get('img_host_1') or '')
                         if (
                             current_img_host
+                            and current_img_host not in disabled_image_hosts
                             and current_img_host not in host_order
                             and (allowed_hosts is None or current_img_host in allowed_hosts)
                         ):

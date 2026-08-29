@@ -86,7 +86,7 @@ The tracker registry currently contains 76 upload targets. Availability and acco
 - Credentials, API keys, announce URLs, or cookies for the trackers and services you use.
 - At least one operational image host for workflows that require hosted screenshots or posters.
 
-PTPImg is retired and should not be selected. Imgbox should be treated as unavailable until its service returns. Configure multiple operational hosts with `img_host_1`, `img_host_2`, and `img_host_3` so uploads can fall back cleanly.
+PTPImg is retired and Imgbox is unavailable until its service returns, so both are skipped by default even if an older config still lists them. This is controlled by `disabled_image_hosts`; remove Imgbox from that setting if it becomes operational again. Configure multiple operational hosts with `img_host_1`, `img_host_2`, and `img_host_3` so uploads can fall back cleanly.
 
 ## Installation
 

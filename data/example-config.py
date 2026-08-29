@@ -31,13 +31,17 @@ config = {
         # IMAGE HOSTING SETTINGS
 
         # Order of image hosts. primary host as first with others as backup
-        # Available image hosts: imgbb, ptpimg, imgbox, pixhost, lensdump, ptscreens, onlyimage, dalexni, zipline, passtheimage, seedpool_cdn, sharex, utppm
+        # Available image hosts: imgbb, pixhost, lensdump, ptscreens, onlyimage, dalexni, zipline, passtheimage, seedpool_cdn, sharex, utppm
         "img_host_1": "",
         "img_host_2": "",
         "img_host_3": "",
         "img_host_4": "",
         "img_host_5": "",
         "img_host_6": "",
+
+        # PTPImg is permanently retired. Imgbox is disabled while its outage is unresolved.
+        # Remove imgbox from this value if it becomes operational again.
+        "disabled_image_hosts": "ptpimg, imgbox",
 
         # image host api keys
         "imgbb_api": "",

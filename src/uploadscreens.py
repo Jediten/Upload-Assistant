@@ -17,6 +17,7 @@ import pyimgbox
 from typing_extensions import TypeAlias
 
 from src.console import console
+from src.imagehosts import get_disabled_image_hosts
 
 Meta: TypeAlias = dict[str, Any]
 ImageDict: TypeAlias = dict[str, Any]
@@ -59,6 +60,10 @@ async def upload_image_task(args: Sequence[Any]) -> dict[str, Any]:
     try:
         timeout = 60  # Default timeout
         img_url, raw_url, web_url = None, None, None
+
+        default_config = cast(dict[str, Any], config.get('DEFAULT', {}))
+        if img_host in get_disabled_image_hosts(default_config):
+            return {'status': 'failed', 'reason': f"Image host '{img_host}' is disabled"}
 
         if img_host == "imgbox":
             try:
@@ -647,6 +652,7 @@ async def _upload_screens(
 
     initial_img_host = default_config[f'img_host_{img_host_num}']
     img_host = str(meta.get('imghost', ''))
+    disabled_hosts = get_disabled_image_hosts(default_config)
 
     image_list = cast(list[ImageDict], meta.get('image_list', []))
 
@@ -654,17 +660,25 @@ async def _upload_screens(
     if not allowed_hosts:
         allowed_hosts = None
 
-    # Check if current host is allowed, if not find an approved one
-    if allowed_hosts is not None and img_host not in allowed_hosts:
-        console.print(f"[yellow]Current image host '{img_host}' is not in allowed hosts: {allowed_hosts}[/yellow]")
+    if allowed_hosts is not None:
+        allowed_hosts = [host for host in allowed_hosts if host not in disabled_hosts]
+
+    # Check if current host is operational and allowed, otherwise find one that is.
+    host_is_disabled = img_host in disabled_hosts
+    host_is_disallowed = allowed_hosts is not None and img_host not in allowed_hosts
+    if host_is_disabled or host_is_disallowed:
+        if host_is_disabled:
+            console.print(f"[yellow]Skipping disabled image host: {img_host}[/yellow]")
+        else:
+            console.print(f"[yellow]Current image host '{img_host}' is not in allowed hosts: {allowed_hosts}[/yellow]")
 
         # Find the first approved host from config
         approved_host = None
-        for i in range(1, 10):  # Check img_host_1 through img_host_9
+        for i in range(img_host_num, 10):  # Check this and subsequent configured hosts
             host_key = f'img_host_{i}'
             if host_key in default_config:
                 host = default_config[host_key]
-                if host in allowed_hosts:
+                if host and host not in disabled_hosts and (allowed_hosts is None or host in allowed_hosts):
                     approved_host = host
                     img_host_num = i
                     console.print(f"[green]Switching to approved image host: {approved_host}[/green]")
@@ -672,8 +686,9 @@ async def _upload_screens(
 
         if approved_host:
             img_host = approved_host
+            meta['imghost'] = approved_host
         else:
-            console.print(f"[red]No approved image hosts found in config. Available: {allowed_hosts}[/red]")
+            console.print(f"[red]No operational approved image hosts found in config. Available: {allowed_hosts}[/red]")
             return image_list, len(image_list)
 
     if meta['debug']:
@@ -771,6 +786,9 @@ async def _upload_screens(
                             reason = result.get('reason', 'Unknown error')
                             if "duplicate" in reason.lower():
                                 console.print(f"[yellow]Skipping host because duplicate image {index}: {reason}[/yellow]")
+                                return None
+                            elif "disabled" in reason.lower():
+                                console.print(f"[yellow]{reason}. Aborting further attempts.[/yellow]")
                                 return None
                             elif "api key" in reason.lower():
                                 console.print(f"[red]API key error for {img_host}. Aborting further attempts.[/red]")
