@@ -556,10 +556,12 @@ function ConfigLeaf({
   }, [item.value]);
 
   // Helpers and hooks for `default_trackers` (must run unconditionally to obey Rules of Hooks)
+  const trackerAliases = { TAV: 'THV' };
   const normalizeTrackers = (value) => (
     String(value || '')
       .split(',')
       .map((t) => t.trim().toUpperCase())
+      .map((t) => trackerAliases[t] || t)
       .filter(Boolean)
   );
 

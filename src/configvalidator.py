@@ -5,6 +5,8 @@ Validates the user's config.py against expected structure and types.
 """
 from typing import Any, Optional, cast
 
+from src.trackeraliases import normalize_tracker_list
+
 # Required top-level sections
 REQUIRED_SECTIONS = ["DEFAULT", "TRACKERS"]
 
@@ -190,16 +192,7 @@ def validate_config(
     if active_trackers is None:
         # Fall back to default_trackers from config
         default_trackers_val = trackers_section.get("default_trackers", "")
-        if isinstance(default_trackers_val, str) and default_trackers_val.strip():
-            active_trackers = [t.strip().upper() for t in default_trackers_val.split(",") if t.strip()]
-        elif isinstance(default_trackers_val, list):
-            active_trackers = [
-                str(t).strip().upper()
-                for t in cast(list[Any], default_trackers_val)
-                if isinstance(t, str) and t.strip()
-            ]
-        else:
-            active_trackers = []
+        active_trackers = normalize_tracker_list(default_trackers_val)
 
     tracker_errors, tracker_warnings = _validate_trackers_section(trackers_section, active_trackers)
     errors.extend(tracker_errors)

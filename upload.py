@@ -45,6 +45,7 @@ from src.qbitwait import Wait
 from src.queuemanage import QueueManager
 from src.takescreens import TakeScreensManager
 from src.torrentcreate import TorrentCreator
+from src.trackeraliases import normalize_tracker_list
 from src.trackerhandle import process_trackers
 from src.trackers.AR import AR
 from src.trackers.COMMON import COMMON
@@ -1458,11 +1459,7 @@ async def do_the_thing(base_dir: str) -> None:
         # Get active trackers from meta (parsed from command line) or fall back to config default
         active_trackers: Optional[list[str]] = None
         if meta.get('trackers'):
-            if isinstance(meta['trackers'], str):
-                active_trackers = [t.strip().upper() for t in meta['trackers'].split(',') if t.strip()]
-            elif isinstance(meta['trackers'], list):
-                trackers_list = cast(list[Any], meta['trackers'])
-                active_trackers = [str(t).strip().upper() for t in trackers_list if str(t).strip()]
+            active_trackers = normalize_tracker_list(meta['trackers'])
 
         # Get active imghost from meta (parsed from command line)
         active_imghost: Optional[str] = None

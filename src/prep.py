@@ -40,6 +40,7 @@ try:
     from src.sonarr import SonarrManager
     from src.tags import get_tag, tag_override
     from src.tmdb import TmdbManager
+    from src.trackeraliases import normalize_tracker_list
     from src.tvdb import tvdb_data
     from src.tvmaze import tvmaze_manager
     from src.video import video_manager
@@ -547,15 +548,11 @@ class Prep:
             pathed_time_start = time.time()
 
         if not meta.get('emby') and meta.get('trackers'):
-            trackers = meta['trackers']
+            tracker_values = meta['trackers']
         else:
-            default_trackers = self.config['TRACKERS'].get('default_trackers', '')
-            trackers = [tracker.strip() for tracker in default_trackers.split(',')]
+            tracker_values = self.config['TRACKERS'].get('default_trackers', '')
 
-        if isinstance(trackers, str):
-            trackers = [t.strip().upper() for t in trackers.split(',')] if "," in trackers else [trackers.strip().upper()]
-        else:
-            trackers = [t.strip().upper() for t in trackers]
+        trackers = normalize_tracker_list(tracker_values)
         meta['trackers'] = trackers
         meta['requested_trackers'] = trackers
 

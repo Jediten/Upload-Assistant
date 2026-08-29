@@ -14,6 +14,7 @@ import httpx
 
 from src.cleanup import cleanup_manager
 from src.console import console
+from src.trackeraliases import normalize_tracker_list
 from src.trackers.A4K import A4K
 from src.trackers.ACM import ACM
 from src.trackers.AITHER import AITHER
@@ -108,17 +109,9 @@ class TRACKER_SETUP:
 
     def trackers_enabled(self, meta: Meta) -> list[str]:
         trackers_value = meta['trackers'] if meta.get('trackers') is not None else self.config['TRACKERS']['default_trackers']
+        trackers = normalize_tracker_list(trackers_value)
 
-        if isinstance(trackers_value, str):
-            trackers_list = trackers_value.split(',')
-        elif isinstance(trackers_value, list):
-            trackers_list = [str(s) for s in cast(list[Any], trackers_value)]
-        else:
-            trackers_list = []
-
-        trackers = [str(s).strip().upper() for s in trackers_list]
-
-        if meta.get('manual', False):
+        if meta.get('manual', False) and "MANUAL" not in trackers:
             trackers.insert(0, "MANUAL")
 
         valid_trackers = [t for t in trackers if t in tracker_class_map or t == "MANUAL"]
@@ -127,6 +120,9 @@ class TRACKER_SETUP:
         for tracker in removed_trackers:
             console.print(f"Warning: Tracker '{tracker}' is not recognized and will be ignored.", markup=False)
 
+        # Persist normalized values in the run metadata so legacy aliases do
+        # not leak into later search, validation, or upload stages.
+        meta['trackers'] = valid_trackers
         return valid_trackers
 
     async def get_banned_groups(self, meta: Meta, tracker: str) -> Optional[str]:
