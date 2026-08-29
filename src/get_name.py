@@ -30,6 +30,28 @@ TRACKER_DISC_REQUIREMENTS = {
 Meta: TypeAlias = MutableMapping[str, Any]
 
 
+def get_release_name_year(meta: Meta) -> str:
+    """Return the year that belongs in a generated release name.
+
+    TV years are disambiguators: include one only when the matched series name
+    was qualified with a year, or when the user explicitly forces it.  Movies
+    continue to include their year by default, and ``--no-year`` wins for every
+    category.
+    """
+    year = str(meta.get('year', '') or '').strip()
+    manual_year_value = meta.get('manual_year')
+    if manual_year_value is not None and int(manual_year_value) > 0:
+        year = str(manual_year_value)
+
+    if meta.get('no_year', False):
+        return ''
+    if meta.get('category') == 'TV' and not (
+        meta.get('force_year', False) or str(meta.get('search_year', '') or '').strip()
+    ):
+        return ''
+    return year
+
+
 class NameManager:
     def __init__(self, config: dict[str, Any]) -> None:
         self.config = config
@@ -55,10 +77,7 @@ class NameManager:
         type = str(meta.get('type', "")).upper()
         title = str(meta.get('title', ""))
         alt_title = str(meta.get('aka', ""))
-        year = str(meta.get('year', ""))
-        manual_year_value = meta.get('manual_year')
-        if manual_year_value is not None and int(manual_year_value) > 0:
-            year = str(manual_year_value)
+        year = get_release_name_year(meta)
         resolution = str(meta.get('resolution', ""))
         if resolution == "OTHER":
             resolution = ""
@@ -98,15 +117,12 @@ class NameManager:
             edition = edition.replace('Hybrid', '').strip()
 
         if meta['category'] == "TV":
-            year = meta['year'] if (meta['search_year'] != "" or meta.get('force_year', False)) else ""
             if meta.get('manual_date'):
                 # Ignore season and year for --daily flagged shows, just use manual date stored in episode_name
                 season = ''
                 episode = ''
         if meta.get('no_season', False) is True:
             season = ''
-        if meta.get('no_year', False) is True:
-            year = ''
         if meta.get('no_aka', False) is True:
             alt_title = ''
         if meta['debug']:

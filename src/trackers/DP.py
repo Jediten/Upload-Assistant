@@ -6,6 +6,7 @@ import pycountry
 
 from src.console import console
 from src.get_desc import DescriptionBuilder
+from src.get_name import get_release_name_year
 from src.languages import languages_manager
 from src.tmdb import TmdbManager, get_tmdb_localized_data
 from src.trackers.UNIT3D import UNIT3D
@@ -291,14 +292,7 @@ class DP(UNIT3D):
         marker = f"{season}{episode}".strip()
 
         if meta.get('category') == 'TV' and marker and marker in dp_name:
-            # Year is a disambiguator, not a fixture: carry it only when TVDB
-            # qualified the series name with one (prep.py L1084-1091 harvests it
-            # into search_year), which is what the core gates on at
-            # get_name.py L101. Honour --no-year like the core does at L108.
-            year = ''
-            forced = bool(meta.get('force_year', False))
-            if not meta.get('no_year', False) and (forced or str(meta.get('search_year', '') or '').strip()):
-                year = str(meta.get('year', '') or '').strip()
+            year = get_release_name_year(meta)
             aka = ''
             if not meta.get('no_aka', False):
                 imdb_aka = str((meta.get('imdb_info') or {}).get('aka', '') or '').strip()

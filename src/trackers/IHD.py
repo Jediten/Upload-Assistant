@@ -6,6 +6,7 @@ import cli_ui
 import pycountry
 
 from src.console import console
+from src.get_name import get_release_name_year
 from src.languages import languages_manager
 from src.tmdb import get_tmdb_localized_data
 from src.trackers.COMMON import COMMON
@@ -188,9 +189,9 @@ class IHD(UNIT3D):
         #    imdb_info['aka'] itself falls back to the IMDb title when IMDb has
         #    no distinct alternate title (imdb.py L309) -- that fallback is the
         #    situation for releases like this one.
-        # 3) Order: IHD wants title, AKA, year (core TV order is title, year,
-        #    AKA). Rebuild only the pre-episode head; leave the season/episode
-        #    marker and everything after it exactly as the core built it.
+        # 3) Order: IHD wants title, AKA, optional disambiguating year. Rebuild
+        #    only the pre-episode head; leave the season/episode marker and
+        #    everything after it exactly as the core built it.
         try:
             tmdb_main = await get_tmdb_localized_data(
                 meta, data_type='main', language='en-US', append_to_response=''
@@ -206,7 +207,7 @@ class IHD(UNIT3D):
         marker = f"{season}{episode}".strip()
 
         if meta.get('category') == 'TV' and marker and marker in ihd_name:
-            year = str(meta.get('year', '') or '').strip()
+            year = get_release_name_year(meta)
             aka = ''
             if not meta.get('no_aka', False):
                 imdb_aka = str((meta.get('imdb_info') or {}).get('aka', '') or '').strip()
