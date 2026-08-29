@@ -228,7 +228,9 @@ class PTP:
             console.print("[bold green]Successfully grabbed description from PTP")
             console.print(f"Description after cleaning:\n{desc[:1000]}...", markup=False)  # Show first 1000 characters for brevity
 
-            if not meta.get('skipit') and not meta['unattended']:
+            # A supplied PTP ID may skip ID confirmation, but it must not skip
+            # description review during an interactive run.
+            if not meta['unattended']:
                 # Allow user to edit or discard the description
                 console.print("[cyan]Do you want to edit, discard or keep the description?[/cyan]")
                 edit_choice = cli_ui.ask_string("Enter 'e' to edit, 'd' to discard, or press Enter to keep it as is: ")

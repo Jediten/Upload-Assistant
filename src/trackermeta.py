@@ -653,9 +653,28 @@ async def update_metadata_from_tracker(
                     bbcode.clean_hdb_description(description_source),
                 )
                 if description and len(description) > 0 and not only_id:
+                    console.print("[bold green]Successfully grabbed description from HDB")
                     console.print(f"Description content:\n{description[:500]}...", markup=False)
-                    meta['description'] = description
-                    meta['saved_description'] = True
+                    if not meta.get('unattended'):
+                        console.print("[cyan]Do you want to edit, discard or keep the description?[/cyan]")
+                        edit_choice_raw = cli_ui.ask_string("Enter 'e' to edit, 'd' to discard, or press Enter to keep it as is: ")
+                        edit_choice = (edit_choice_raw or "").strip().lower()
+
+                        if edit_choice == 'e':
+                            edited_description = click.edit(description)
+                            if edited_description:
+                                description = edited_description.strip()
+                        elif edit_choice == 'd':
+                            description = None
+                            meta['description'] = ""
+                            meta['hdb_description'] = ""
+                            console.print("[yellow]Description discarded.[/yellow]")
+                        else:
+                            console.print("[green]Keeping the original description.[/green]")
+
+                    if description:
+                        meta['description'] = description
+                        meta['saved_description'] = True
                 else:
                     console.print("[yellow]HDB description empty[/yellow]")
                 if image_list and meta.get('keep_images'):

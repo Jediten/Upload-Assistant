@@ -713,7 +713,11 @@ class COMMON:
                     console.print(f"[green]Successfully grabbed description from {tracker}")
                     console.print(f"Extracted description: {description}", markup=False)
 
-                    if meta.get('unattended') or (meta.get('blu') or meta.get('aither') or meta.get('lst') or meta.get('oe') or meta.get('huno') or meta.get('ulcx')):
+                    # Explicit/auto-discovered source tracker IDs should not bypass
+                    # description review during an interactive run. Imported notes
+                    # often belong to another uploader and may not be suitable for
+                    # the new upload unchanged.
+                    if meta.get('unattended'):
                         return tmdb, imdb, tvdb, mal, description, category, infohash, imagelist, file_name
                     else:
                         console.print("[cyan]Do you want to edit, discard or keep the description?[/cyan]")
