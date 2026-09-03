@@ -126,7 +126,6 @@ These will parse the torrent descriptions from supported sites, and grab metadat
 - `-blu`, `--blu ID_OR_URL`: BLU torrent id/link. (Extracts last path segment.)
 - `-aither`, `--aither ID_OR_URL`: Aither torrent id/link. (Extracts last path segment.)
 - `-lst`, `--lst ID_OR_URL`: LST torrent id/link. (Extracts last path segment.)
-- `-digi`, `--digi ID_OR_URL`: Diginette torrent id/link. (Extracts last path segment.)
 - `-oe`, `--oe ID_OR_URL`: OE torrent id/link. (Extracts last path segment.)
 - `-tik`, `--tik ID_OR_URL`: TIK torrent id/link. (No URL parsing here; passes through.)
 - `-hdb`, `--hdb ID_OR_URL`: HDB torrent id/link. (Extracts `id` from query string.)

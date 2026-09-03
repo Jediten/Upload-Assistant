@@ -60,10 +60,6 @@ class Clients(QbittorrentClientMixin, RtorrentClientMixin, DelugeClientMixin, Tr
                 tracker_id = _last_path_id(path)
                 if tracker_id:
                     tracker_ids["lst"] = tracker_id
-            elif _is_host(host, "diginette.org"):
-                tracker_id = _last_path_id(path)
-                if tracker_id:
-                    tracker_ids["digi"] = tracker_id
             elif _is_host(host, "onlyencodes.cc"):
                 tracker_id = _last_path_id(path)
                 if tracker_id:

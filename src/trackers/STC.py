@@ -4,6 +4,7 @@ from typing import Any, Optional, cast
 
 import cli_ui
 
+from src.languages import languages_manager
 from src.console import console
 from src.get_desc import DescriptionBuilder
 from src.rehostimages import RehostImagesManager
@@ -26,8 +27,17 @@ class STC(UNIT3D):
         self.upload_url = f'{self.base_url}/api/torrents/upload'
         self.search_url = f'{self.base_url}/api/torrents/filter'
         self.torrent_url = f'{self.base_url}/torrents/'
-        self.banned_groups = [""]
-        self.approved_image_hosts = ['imgbox', 'imgbb']
+        self.banned_groups = [
+            '-ZR-', '126811', '4K4U', 'Aisha', 'Aisha@RFX', 'Alcaide_Kira', 'AOS', 'ARCADE', 'AV1D', 'aXXo', 'B3LLUM', 
+            'BiTOR', 'BONE', 'BRrip', 'CM8', 'CREATiVE24', 'CrEwSaDe', 'CTFOH', 'd3g', 'dAV1nci', 'DepraveD', 'DNL', 'EGEN', 
+            'eranger2', 'EVO', 'FaNGDiNG0', 'FGT', 'flower', 'FoxTorrentX', 'GalaxyTV', 'HD2DVD', 'HDHub4u', 'HDT', 'HDTime', 
+            'iHYTECH', 'ION10', 'iPlanet', 'iVy', 'KaPPa', 'KiNGDOM', 'LAMA', 'MeGusta', 'mHD', 'mSD', 'NaNi', 'NhaNc3', 'nHD', 
+            'nikt0', 'nSD', 'OFT', 'OldT', 'PAAI', 'PANDEMONiUM', 'PHOCiS', 'PiGNUS', 'PRODJi', 'PSA', 'R&H', 'RARBG', 'Rifftrax', 
+            'SANTi', 'SasukeducK', 'seedpool', 'SEEDSTER', 'ShAaNiG', 'Sicario', 'SP3LL', 'SPx', 'STUTTERSHIT', 'TAoE', 'TEKNO3D', 
+            'TGALAXY', 'TGx', 'tokar86a', 'TORRENTGALAXY', 'ToVaR', 'TSP', 'TSPxL', 'UnKn0wn', 'ViSION', 'VN_Foxcore', 'VXT', 'WAF', 
+            'WKS', 'x0r', 'YIFY', 'YTS', 'YTS.MX', 'ZR',
+        ]
+        self.approved_image_hosts = ['imgbox', 'imgbb', 'onlyimage', 'ptpimg', 'ptscreens']
         pass
 
     async def get_type_id(
@@ -55,11 +65,45 @@ class STC(UNIT3D):
 
     async def get_additional_checks(self, meta: Meta) -> bool:
         should_continue = True
-        if str(meta.get('category', '')) != 'TV':
-            if not bool(meta.get('unattended')):
-                console.print(f'[bold red]Only TV uploads allowed at {self.tracker}.[/bold red]')
+
+        # Mediainfo encoding validation
+        if not meta.get('valid_mi_settings'):
+            console.print(
+                f"[bold red]No encoding settings in mediainfo, "
+                f"skipping {self.tracker} upload.[/bold red]"
+            )
             return False
 
+        # Language requirements
+        if meta.get('is_disc') not in ["BDMV", "DVD"] and not await self.common.check_language_requirements(
+            meta,
+            self.tracker,
+            languages_to_check=["english"],
+            check_audio=True,
+            check_subtitle=True,
+            original_language=True
+        ):
+            return False
+
+        # STC allows TV and documentaries
+        category = str(meta.get('category', '')).upper()
+
+        genres = (
+            f"{meta.get('keywords', '')} "
+            f"{meta.get('combined_genres', '')}"
+        ).lower()
+
+        is_documentary = 'documentary' in genres
+
+        if category != 'TV' and not is_documentary:
+            if not bool(meta.get('unattended')):
+                console.print(
+                    f'[bold red]Only TV and documentaries allowed at '
+                    f'{self.tracker}.[/bold red]'
+                )
+            return False
+
+        # Porn/adult filtering
         genres = f"{meta.get('keywords', '')} {meta.get('combined_genres', '')}"
         adult_keywords = ['xxx', 'erotic', 'porn', 'adult', 'orgy', 'hentai', 'adult animation', 'softcore']
         if any(re.search(rf'(^|,\s*){re.escape(keyword)}(\s*,|$)', genres, re.IGNORECASE) for keyword in adult_keywords):
@@ -80,6 +124,9 @@ class STC(UNIT3D):
         url_host_mapping = {
             "ibb.co": "imgbb",
             "imgbox.com": "imgbox",
+            "ptpimg.me": "ptpimg",
+            "onlyimage.org": "onlyimage",
+            "ptscreens.com": "ptscreens",
         }
         await self.rehost_images_manager.check_hosts(
             meta,
@@ -100,3 +147,52 @@ class STC(UNIT3D):
                 approved_image_hosts=self.approved_image_hosts,
             )
         }
+
+    # Foreign Lang Processing
+    async def get_name(self, meta: Meta) -> dict[str, str]:
+        stc_name = str(meta.get('name', ''))
+
+        # Ensure languages are processed
+        if not meta.get('audio_languages'):
+            await languages_manager.process_desc_language(
+                meta,
+                tracker=self.tracker
+            )
+
+        audio_languages_value = meta.get('audio_languages', [])
+        audio_languages = (
+            cast(list[str], audio_languages_value)
+            if isinstance(audio_languages_value, list)
+            else []
+        )
+
+        # Add foreign language before audio codec
+        # Only if NO English audio exists
+        # Full discs are exempt
+        if meta.get('is_disc') not in ["BDMV", "DVD"]:
+            if (
+                audio_languages
+                and not await languages_manager.has_english_language(audio_languages)
+            ):
+                foreign_lang = str(audio_languages[0]).upper()
+
+                audio = str(
+                    meta.get('audio', '')
+                    or meta.get('audio_codec', '')
+                )
+
+                if (
+                    audio
+                    and foreign_lang not in stc_name.upper()
+                ):
+                    stc_name = stc_name.replace(
+                        audio,
+                        f"{foreign_lang} {audio}",
+                        1
+                    )
+
+        # Rule: In the absence of a release group use NOGROUP as the tag
+        if not meta.get('tag'):
+            stc_name += "-NOGROUP"
+
+        return {'name': stc_name}

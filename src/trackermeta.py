@@ -584,7 +584,7 @@ async def update_metadata_from_tracker(
                 console.print(f"[yellow]{tracker_name} returned invalid IDs (both 0)[/yellow]")
             found_match = False
 
-    elif tracker_name in ["HUNO", "BLU", "AITHER", "LST", "DIGI", "OE", "ULCX", "RF", "OTW", "YUS", "DP", "SP"]:
+    elif tracker_name in ["HUNO", "BLU", "AITHER", "LST", "OE", "ULCX", "RF", "OTW", "YUS", "DP", "SP"]:
         if meta.get(tracker_key) is not None:
             if meta['debug']:
                 console.print(f"[cyan]{tracker_name} ID found in meta, reusing existing ID: {meta[tracker_key]}[/cyan]")

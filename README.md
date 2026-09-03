@@ -11,14 +11,14 @@ The official project is in development freeze and directs future upstream develo
 
 ## Fork Highlights
 
-- Additional and updated tracker support, including Diginette, MidnightScene, NordicQuality, PeerGarden, TorrentHaven, and Zenith.
+- Additional and updated tracker support, including MidnightScene, NordicQuality, PeerGarden, TorrentHaven, and Zenith.
 - Interactive review before imported tracker descriptions or screenshots are accepted—even when a tracker ID was supplied explicitly.
 - Declining imported screenshots clears the imported image metadata and all cached PNG files for that release, preventing stale screenshots from being reused.
 - Unattended mode remains automatic and does not stop for these review prompts.
 - TV release years are used as title disambiguators instead of being added unconditionally. `--force-year` adds one explicitly and `--no-year` always removes it.
 - InfinityHD and DarkPeers retain their customized TMDB title and title/AKA/year ordering while sharing the same TV-year decision as the core name generator.
 - PTP posters are rehosted through the selected image host instead of assuming PTPImg is available.
-- The WebUI exposes the fork's trackers and tracker-reference arguments, including Diginette.
+- The WebUI exposes the fork's trackers and tracker-reference arguments.
 - Current compatible critical fixes from upstream are included, covering TVDB metadata, IMDb editions, PTP poster rehosting, Nebulance duplicate handling, and ImmortalSeed upload detection.
 
 ## Features
@@ -47,36 +47,36 @@ The tracker registry currently contains 76 upload targets. Availability and acco
 | BrasilJapão-Share | `BJS` | BrasilTracker | `BT` |
 | CapybaraBR | `CBR` | Cinematik | `TIK` |
 | CinemaZ | `CZ` | DarkPeers | `DP` |
-| DesiTorrents | `DT` | Diginette | `DIGI` |
-| DigitalCore | `DC` | Emuwarez | `EMUW` |
-| FileList | `FL` | Friki | `FRIKI` |
-| FunFile | `FF` | GreatPosterWall | `GPW` |
-| hawke-uno | `HUNO` | HD-Space | `HDS` |
-| HD-Torrents | `HDT` | HDBits | `HDB` |
-| HomieHelpDesk | `HHD` | ImmortalSeed | `IS` |
-| InfinityHD | `IHD` | ItaTorrents | `ITT` |
-| KoKoCon | `KKC` | LastDigitalUnderground | `LDU` |
-| Lat-Team | `LT` | Locadora | `LCD` |
-| LST | `LST` | Luminarr | `LUME` |
-| MidnightScene | `MNS` | MoreThanTV | `MTV` |
-| Nebulance | `NBL` | NetHD | `NETHD` |
-| NordicQuality | `NQ` | OldToonsWorld | `OTW` |
-| OnlyEncodes+ | `OE` | PassThePopcorn | `PTP` |
-| PeerGarden | `PG` | PolishTorrent | `PTT` |
-| Portugas | `PT` | PrivateHD | `PHD` |
-| PTerClub | `PTER` | PTSKIT | `PTS` |
-| Racing4Everyone | `R4E` | Rastastugan | `RAS` |
-| ReelFLiX | `RF` | RetroFlix | `RTF` |
-| Samaritano | `SAM` | seedpool | `SP` |
-| ShareIsland | `SHRI` | SkipTheCommercials | `STC` |
-| SpeedApp | `SPD` | Swarmazon | `SN` |
-| The Leach Zone | `TLZ` | TheOldSchool | `TOS` |
-| Torrenteros | `TTR` | TorrentHaven | `THV` |
-| TorrentHR | `THR` | TorrentLeech | `TL` |
-| ToTheGlory | `TTG` | TVChaosUK | `TVC` |
-| ULCX | `ULCX` | UTOPIA | `UTP` |
-| VietMediaF | `VMF` | YOiNKED | `YOINK` |
-| YUSCENE | `YUS` | Zenith | `ZNTH` |
+| DesiTorrents | `DT` | DigitalCore | `DC` |
+| Emuwarez | `EMUW` | FileList | `FL` |
+| Friki | `FRIKI` | FunFile | `FF` |
+| GreatPosterWall | `GPW` | hawke-uno | `HUNO` |
+| HD-Space | `HDS` | HD-Torrents | `HDT` |
+| HDBits | `HDB` | HomieHelpDesk | `HHD` |
+| ImmortalSeed | `IS` | InfinityHD | `IHD` |
+| ItaTorrents | `ITT` | KoKoCon | `KKC` |
+| LastDigitalUnderground | `LDU` | Lat-Team | `LT` |
+| Locadora | `LCD` | LST | `LST` |
+| Luminarr | `LUME` | MidnightScene | `MNS` |
+| MoreThanTV | `MTV` | Nebulance | `NBL` |
+| NetHD | `NETHD` | NordicQuality | `NQ` |
+| OldToonsWorld | `OTW` | OnlyEncodes+ | `OE` |
+| PassThePopcorn | `PTP` | PeerGarden | `PG` |
+| PolishTorrent | `PTT` | Portugas | `PT` |
+| PrivateHD | `PHD` | PTerClub | `PTER` |
+| PTSKIT | `PTS` | Racing4Everyone | `R4E` |
+| Rastastugan | `RAS` | ReelFLiX | `RF` |
+| RetroFlix | `RTF` | Samaritano | `SAM` |
+| seedpool | `SP` | ShareIsland | `SHRI` |
+| SkipTheCommercials | `STC` | SpeedApp | `SPD` |
+| Swarmazon | `SN` | The Leach Zone | `TLZ` |
+| TheOldSchool | `TOS` | Torrenteros | `TTR` |
+| TorrentHaven | `THV` | TorrentHR | `THR` |
+| TorrentLeech | `TL` | ToTheGlory | `TTG` |
+| TVChaosUK | `TVC` | ULCX | `ULCX` |
+| UTOPIA | `UTP` | VietMediaF | `VMF` |
+| YOiNKED | `YOINK` | YUSCENE | `YUS` |
+| Zenith | `ZNTH` |  |  |
 
 ## Requirements
 
@@ -144,10 +144,10 @@ Examples:
 
 ```bash
 # Prepare one release for selected trackers
-python upload.py "/data/movies/Example Movie (2026)" --trackers IHD,DIGI,DP
+python upload.py "/data/movies/Example Movie (2026)" --trackers IHD,DP,STC
 
-# Supply an existing Diginette torrent as a metadata reference
-python upload.py "/data/tv/Example Show" --digi https://diginette.org/torrents/12345
+# Supply an existing LST torrent as a metadata reference
+python upload.py "/data/tv/Example Show" --lst https://lst.gg/torrents/12345
 
 # Start the WebUI with one allowed browse root
 python upload.py "/data/torrents" --webui 127.0.0.1:5000

@@ -228,7 +228,6 @@ const trackerNameMap = {
   'TIK': 'Cinematik',
   'DP': 'DarkPeers',
   'DC': 'DigitalCore',
-  'DIGI': 'Diginette',
   'EMUW': 'Emuwarez',
   'FL': 'FileList',
   'FRIKI': 'Friki',
