@@ -94,26 +94,27 @@ class PG(UNIT3D):
         reverse: bool = False,
         mapping_only: bool = False,
     ) -> dict[str, str]:
-        # PG's table is not the UNIT3D one - it has no 4320p row, so everything
-        # sits one lower. Anchored on the API reference, which documents 1080p as 2.
+        # Matches PG's standard UNIT3D resolution table (verified against the
+        # upload form dropdown). No 8640p or 1440p rows exist on PG, so 8640p
+        # falls to Other (10) and 1440p is treated as 1080p (3).
         resolution_id = {
-            '8640p': '9',
+            '8640p': '10',
             '4320p': '1',
-            '2160p': '1',
-            '1440p': '2',
-            '1080p': '2',
-            '1080i': '3',
-            '720p': '4',
-            '576p': '5',
-            '576i': '6',
-            '480p': '7',
-            '480i': '8',
+            '2160p': '2',
+            '1440p': '3',
+            '1080p': '3',
+            '1080i': '4',
+            '720p': '5',
+            '576p': '6',
+            '576i': '7',
+            '480p': '8',
+            '480i': '9',
         }
         if mapping_only:
             return resolution_id
         elif reverse:
             return {v: k for k, v in resolution_id.items()}
         elif resolution:
-            return {'resolution_id': resolution_id.get(resolution, '9')}
+            return {'resolution_id': resolution_id.get(resolution, '10')}
         else:
-            return {'resolution_id': resolution_id.get(str(meta.get('resolution', '')), '9')}
+            return {'resolution_id': resolution_id.get(str(meta.get('resolution', '')), '10')}
